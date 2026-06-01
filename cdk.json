@@ -1,0 +1,19 @@
+{
+  "app": "node infra/bin/app.js",
+  "watch": {
+    "include": ["infra/**"],
+    "exclude": [
+      "README.md",
+      "cdk*.json",
+      "**/*.d.ts",
+      "**/*.js",
+      "tests/**",
+      "docs/**"
+    ]
+  },
+  "context": {
+    "@aws-cdk/aws-lambda:recognizeVersionProps": true,
+    "@aws-cdk/core:checkSecretUsage": true,
+    "@aws-cdk/core:target-partitions": ["aws", "aws-cn"]
+  }
+}
