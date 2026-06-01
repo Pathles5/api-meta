@@ -718,7 +718,7 @@ GitHub Actions (CI/CD)
 
 **GitHub Secrets eliminados**: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
 
-**Requiere**: IAM role `GitHubActionsDeployRole` with OIDC trust policy in AWS
+**Requiere**: IAM role `GitHubActionsDeployRole` with OIDC trust policy in AWS (✅ Account ID: `159177056493`)
 
 ---
 

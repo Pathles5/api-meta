@@ -48,6 +48,11 @@ Sesión de revisión completa del proyecto con 4 agentes especializados (reviewe
 - ci.yml: Added `aws sts get-caller-identity` verification step
 - GitHub Secrets eliminados: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
 
+### Manual changes by user (2026-06-01)
+- ci.yml: ARN actualizado con AWS Account ID real (`159177056493`)
+- ci.yml: pnpm action actualizado de `@v4` a `@v6`
+- GitHub ActionsDeployRole creado en AWS console
+
 ---
 
 ## Estado final del proyecto
@@ -80,6 +85,7 @@ Sesión de revisión completa del proyecto con 4 agentes especializados (reviewe
 1. **S-1 (Crítico):** Verificar si el token `EAAL4y0p...` en `.env` fue comprometido. Si se usó en producción, rotarlo en Meta Developers.
 2. **Phase 7: Webhooks** — Implementar `POST /webhooks`, validación de firma Meta, challenge-response.
 3. **Phase 8: Production Readiness** — OpenAPI/Swagger, CloudWatch dashboard, cost review final.
+4. **`gh` CLI**: Ejecutar `gh auth login` para autenticar y poder consultar estado de deploys.
 
 ---
 
