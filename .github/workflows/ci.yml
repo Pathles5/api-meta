@@ -20,7 +20,7 @@ jobs:
           node-version: "24"
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: Get pnpm store directory
         shell: bash
@@ -60,8 +60,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          # TODO: Replace 123456789012 with your real AWS Account ID
-          role-to-assume: arn:aws:iam::123456789012:role/GitHubActionsDeployRole
+          role-to-assume: arn:aws:iam::159177056493:role/GitHubActionsDeployRole
           aws-region: eu-west-1
 
       - name: Verify Identity
