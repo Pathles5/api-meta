@@ -96,6 +96,7 @@
 - [x] pnpm cache in CI
 - [x] Dependency audit (critical level)
 - [x] Security hardening (timing-safe auth, body limit, batch writes)
+- [x] CI/CD: OIDC for AWS credentials (eliminated static keys)
 
 ---
 

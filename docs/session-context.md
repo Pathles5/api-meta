@@ -42,6 +42,12 @@ Sesión de revisión completa del proyecto con 4 agentes especializados (reviewe
 - .gitignore: Agregado `.env.*` (excluye .env.example)
 - ci.yml: `--require-approval broadening`, `--audit-level=critical`, limpieza cdk-outputs.json
 
+### CI/CD — OIDC migration
+- ci.yml: Replaced static `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` with OIDC `role-to-assume`
+- ci.yml: Added `permissions: id-token: write` for OIDC token exchange
+- ci.yml: Added `aws sts get-caller-identity` verification step
+- GitHub Secrets eliminados: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
+
 ---
 
 ## Estado final del proyecto
@@ -74,6 +80,25 @@ Sesión de revisión completa del proyecto con 4 agentes especializados (reviewe
 1. **S-1 (Crítico):** Verificar si el token `EAAL4y0p...` en `.env` fue comprometido. Si se usó en producción, rotarlo en Meta Developers.
 2. **Phase 7: Webhooks** — Implementar `POST /webhooks`, validación de firma Meta, challenge-response.
 3. **Phase 8: Production Readiness** — OpenAPI/Swagger, CloudWatch dashboard, cost review final.
+
+---
+
+## GitHub Integration — Research Summary
+
+### Opciones evaluadas
+
+| Opción | Dependencias | Recomendada |
+|--------|-------------|-------------|
+| `gh` CLI (binario sistema) | Instalación manual | Para interacción del agente |
+| **Native `fetch` API** | **Ninguna (Node.js built-in)** | **Elección principal** |
+| `@octokit/rest` | npm package | No recomendado (dependencia innecesaria) |
+| GitHub Webhooks | Server-side | Para Phase 8+ |
+
+### Recomendación: `fetch` nativo + `gh` CLI
+- **`fetch`** para integración programática (misma línea que `metaApi.js`)
+- **`gh` CLI** para interacción del agente desde terminal
+- Ambos sin dependencias npm
+- Patrón idéntico al existente en `src/services/metaApi.js`
 
 ---
 

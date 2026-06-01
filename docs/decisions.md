@@ -622,11 +622,11 @@ GitHub Actions (CI/CD)
 
 | Secret | Description |
 |--------|-------------|
-| `AWS_ACCESS_KEY_ID` | AWS IAM access key |
-| `AWS_SECRET_ACCESS_KEY` | AWS IAM secret key |
 | `META_ACCESS_TOKEN` | Meta API token (for Lambda env) |
 | `META_IG_USER_ID` | Instagram Business Account ID |
 | `AUTH_API_KEY` | API key for client authentication |
+
+> Nota: `AWS_ACCESS_KEY_ID` y `AWS_SECRET_ACCESS_KEY` eliminados — ahora se usa OIDC con `role-to-assume`.
 
 **Rationale**:
 - Secrets never in code, .env, or repo
@@ -698,6 +698,27 @@ GitHub Actions (CI/CD)
 - Reduces DynamoDB round trips by ~25x
 - Lower Lambda duration cost
 - Shared `createdAt` timestamp per batch
+
+---
+
+## 2026-06-01: CI/CD Security Hardening
+
+### Decision: OIDC for AWS Credentials (Eliminating Static Keys)
+
+**Context**: `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` were stored as GitHub Secrets. Static keys have rotation requirements and potential exposure risk.
+
+**Decision**: Replace static keys with OIDC (OpenID Connect) via `aws-actions/configure-aws-credentials@v4` with `role-to-assume`.
+
+**Rationale**:
+- No long-lived AWS secrets in GitHub Secrets
+- Temporary credentials (1-hour expiry) via OIDC token exchange
+- Automatic rotation — no manual key management
+- GitHub OIDC provider cryptographically signs tokens
+- Added `permissions: id-token: write` and `aws sts get-caller-identity` verification
+
+**GitHub Secrets eliminados**: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
+
+**Requiere**: IAM role `GitHubActionsDeployRole` with OIDC trust policy in AWS
 
 ---
 
