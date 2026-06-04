@@ -229,6 +229,9 @@ importers:
       '@eslint/js':
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.4.1)
+      aws-cdk:
+        specifier: ^2.1125.0
+        version: 2.1125.0
       aws-cdk-lib:
         specifier: ^2.257.0
         version: 2.257.0(constructs@10.6.0)
@@ -520,6 +523,11 @@ packages:
       - table
       - yaml
       - mime-types
+
+  aws-cdk@2.1125.0:
+    resolution: {integrity: sha512-QAvsE2XQMcyNOjMMqAS7eDADR9t6vcFcMQvhOmtLfDqgfJXSyTkHvzM5zgwZCdJ4FNqWr5Y/zXvL1Cv5ECKXwQ==}
+    engines: {node: '>= 18.0.0'}
+    hasBin: true
 
   balanced-match@4.0.4:
     resolution: {integrity: sha512-BLrgEcRTwX2o6gGxGOCNyMvGSp35YofuYzw9h1IMTRmKqttAZZVU67bdb9Pr2vUHA8+j3i2tJfjO6C6+4myGTA==}
@@ -1415,6 +1423,8 @@ snapshots:
       '@aws-cdk/asset-node-proxy-agent-v6': 2.1.2
       '@aws-cdk/cloud-assembly-schema': 53.28.0
       constructs: 10.6.0
+
+  aws-cdk@2.1125.0: {}
 
   balanced-match@4.0.4: {}
 
