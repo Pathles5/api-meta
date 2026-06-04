@@ -1,46 +1,12 @@
-# Session Context — 2026-06-01
+# Session Context — 2026-06-04
 
 ## Resumen de sesión
 
-Sesión de revisión completa del proyecto con 4 agentes especializados (reviewer, devops, architect, documentation), seguida de implementación de hallazgos críticos.
-
----
-
-## Agentes utilizados
-
-| Agente | Rol | Resultado |
-|--------|-----|-----------|
-| reviewer | Code quality review | Score 7/10 — 4 críticos, 10 mayores, 10 menores |
-| devops | CI/CD & infra review | Score infra 6/10 — 4 críticos, 9 warnings |
-| architect | AWS cloud review | Score 7.5/10 — 8 debilidades, 12 mejoras |
-| documentation | Docs review | Score 7/10 — 13 inconsistencias |
+Sesión de configuración CI/CD con OIDC, diagnóstico de errores de deploy, y documentación del plan de empaquetado Lambda.
 
 ---
 
 ## Cambios implementados
-
-### Documentación (documentation agent)
-- README.md: Express.js 5, AWS_REGION eu-west-1, diagrama arquitectura, POST /sync body docs
-- PROJECT_CONTEXT.md: Future features actualizados, desired structure expandida
-- docs/decisions.md: v19.0→v24.0, APP_ prefix vars, phase numbering, postVerification decision
-- docs/roadmap.md: Phase 7 status, removed redundant pending items
-- .env.example: AWS_REGION eu-west-1
-
-### Código (developer agent)
-- src/middleware/authenticate.js: `crypto.timingSafeEqual` (timing-safe)
-- src/middleware/errorHandler.js: Log level diferenciado (warn/error)
-- src/repositories/postRepository.js: `BatchWriteCommand` en chunks de 25
-- src/app.js: `express.json({ limit: "1mb" })`
-- src/services/metaApi.js: `encodeURIComponent()` en fetchPosts y fetchPost
-
-### Infraestructura (devops agent)
-- infra/lib/ig-api-stack.js: TTL habilitado, Lambda packaging optimizado, throttling, CloudWatch alarms
-- .github/workflows/ci.yml: pnpm cache, conditional bootstrap, approval broadening, audit critical, cdk-outputs cleanup
-
-### Seguridad (security audit)
-- .env: AWS_REGION corregido a eu-west-1
-- .gitignore: Agregado `.env.*` (excluye .env.example)
-- ci.yml: `--require-approval broadening`, `--audit-level=critical`, limpieza cdk-outputs.json
 
 ### CI/CD — OIDC migration
 - ci.yml: Replaced static `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` with OIDC `role-to-assume`
@@ -48,14 +14,113 @@ Sesión de revisión completa del proyecto con 4 agentes especializados (reviewe
 - ci.yml: Added `aws sts get-caller-identity` verification step
 - GitHub Secrets eliminados: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
 
-### Manual changes by user (2026-06-01)
+### Cambios manuales del usuario
 - ci.yml: ARN actualizado con AWS Account ID real (`159177056493`)
 - ci.yml: pnpm action actualizado de `@v4` a `@v6`
 - GitHub ActionsDeployRole creado en AWS console
+- `aws-cdk` CLI instalado como devDependency
+- `gh` CLI instalado y autenticado
 
 ---
 
-## Estado final del proyecto
+## Estado del deploy — Bloqueado
+
+### Error 1: `--require-approval` (RESUELTO por usuario)
+- `--require-approval broadening` pide TTY en CI
+- **Fix:** Cambiar a `--require-approval never` en `ci.yml:109`
+
+### Error 2: Lambda > 250MB (PENDIENTE)
+- `Code.fromAsset` empaqueta todo `node_modules` (dev+prod)
+- **Fix documentado abajo en "Plan pendiente"**
+
+---
+
+## Plan pendiente: Lambda Packaging
+
+### Problema
+`Code.fromAsset` en `infra/lib/ig-api-stack.js:31` apunta a la raíz del proyecto e incluye todo `node_modules` (~300MB+). Lambda rechaza paquetes > 250MB.
+
+### Solución (2 cambios)
+
+**Cambio 1 — Build step en CI** (`.github/workflows/ci.yml`)
+
+Agregar paso antes de `cdk deploy`:
+```yaml
+- name: Build Lambda package
+  run: |
+    mkdir -p dist
+    cp -r src/ dist/
+    cp lambda.js dist/
+    cp package.json dist/
+    cd dist
+    npm install --omit=dev --ignore-scripts
+```
+
+**Cambio 2 — CDK apunta a `dist/`** (`infra/lib/ig-api-stack.js:31`)
+
+```javascript
+// Antes:
+code: Code.fromAsset(resolve(import.meta.dirname, "../../"), { exclude: [...] })
+
+// Después:
+code: Code.fromAsset(resolve(import.meta.dirname, "../../dist"))
+```
+
+### Resultado esperado
+| Antes | Después |
+|-------|---------|
+| ~300MB+ | ~5-10MB |
+| Incluye aws-cdk, eslint, esbuild | Solo express, dotenv, pino, @aws-sdk |
+| Lambda rechaza | Lambda acepta |
+
+### Nota
+`@aws-sdk/*` se excluye del empaquete porque ya viene en el runtime de Lambda.
+
+---
+
+## Errores diagnosticados (NO implementar)
+
+| Error | Causa | Fix |
+|-------|-------|-----|
+| `Command "cdk" not found` | `aws-cdk` CLI no instalado | `pnpm add -D aws-cdk` ✅ ya hecho |
+| `--require-approval` TTY | CI no tiene terminal | Cambiar a `never` |
+| Lambda > 250MB | node_modules completo | Build step con `--omit=dev` |
+| `gh: command not found` | gh no en PATH de bash | Usar `C:\Program Files\GitHub CLI\gh.exe` |
+
+---
+
+## GitHub Integration
+
+### gh CLI
+- Instalado en `C:\Program Files\GitHub CLI\gh.exe`
+- Autenticado y funcionando
+- Para OpenCode: ejecutar vía Bash tool
+
+### Comandos útiles
+```bash
+# Últimos runs
+& "C:\Program Files\GitHub CLI\gh.exe" run list -R Pathles5/api-meta -L 5
+
+# Ver run específico
+& "C:\Program Files\GitHub CLI\gh.exe" run view <ID> -R Pathles5/api-meta -v
+
+# Ver log de error
+& "C:\Program Files\GitHub CLI\gh.exe" run view <ID> -R Pathles5/api-meta --log-failed
+```
+
+---
+
+## Pendiente para próxima sesión
+
+1. **CRÍTICO: Lambda packaging** — Implementar build step + CDK apuntando a `dist/`
+2. **CRÍTICO: `--require-approval never`** — Cambiar en `ci.yml:109`
+3. **Verificar token Meta** `EAAL4y0p...` — ¿Se usó en producción? Rotar si sí.
+4. **Phase 7: Webhooks** — `POST /webhooks`, validación firma Meta, challenge-response
+5. **Phase 8: Production Readiness** — OpenAPI/Swagger, CloudWatch dashboard
+
+---
+
+## Estado del proyecto
 
 | Fase | Estado |
 |------|--------|
@@ -65,8 +130,8 @@ Sesión de revisión completa del proyecto con 4 agentes especializados (reviewe
 | Phase 3: Security | ✅ Completado |
 | Phase 4: Data Persistence | ✅ Completado |
 | Phase 5: Post Management | ✅ Completado |
-| Phase 6: Infrastructure & Deployment | ✅ Completado |
-| Phase 7: Webhooks | 🔜 Listo para implementar |
+| Phase 6: Infrastructure & Deployment | ⚠️ Deploy bloqueado (Lambda > 250MB) |
+| Phase 7: Webhooks | 🔜 Pendiente |
 | Phase 8: Production Readiness | ⏳ Pendiente |
 
 ---
@@ -75,53 +140,16 @@ Sesión de revisión completa del proyecto con 4 agentes especializados (reviewe
 
 - **Tests:** 71/71 pasan
 - **Lint:** Limpio
-- **Dependencias:** 5 (express, dotenv, pino, @aws-sdk/*, @vendia/serverless-express)
-- **DevDependencies:** 3 (eslint, aws-cdk-lib, constructs)
+- **Último commit:** `fc8d3dd` (ci: force Node.js 24 for GitHub Actions)
+- **Remote:** `https://github.com/Pathles5/api-meta.git`
 
 ---
 
-## Pendiente para próxima sesión
-
-1. **S-1 (Crítico):** Verificar si el token `EAAL4y0p...` en `.env` fue comprometido. Si se usó en producción, rotarlo en Meta Developers.
-2. **Phase 7: Webhooks** — Implementar `POST /webhooks`, validación de firma Meta, challenge-response.
-3. **Phase 8: Production Readiness** — OpenAPI/Swagger, CloudWatch dashboard, cost review final.
-4. **`gh` CLI**: Ejecutar `gh auth login` para autenticar y poder consultar estado de deploys.
-
----
-
-## GitHub Integration — Research Summary
-
-### Opciones evaluadas
-
-| Opción | Dependencias | Recomendada |
-|--------|-------------|-------------|
-| `gh` CLI (binario sistema) | Instalación manual | Para interacción del agente |
-| **Native `fetch` API** | **Ninguna (Node.js built-in)** | **Elección principal** |
-| `@octokit/rest` | npm package | No recomendado (dependencia innecesaria) |
-| GitHub Webhooks | Server-side | Para Phase 8+ |
-
-### Recomendación: `fetch` nativo + `gh` CLI
-- **`fetch`** para integración programática (misma línea que `metaApi.js`)
-- **`gh` CLI** para interacción del agente desde terminal
-- Ambos sin dependencias npm
-- Patrón idéntico al existente en `src/services/metaApi.js`
-
----
-
-## Archivos modificados en esta sesión
+## Archivos clave
 
 ```
-.env                                    # AWS_REGION fix
-.env.example                            # AWS_REGION fix (ya estaba)
-.gitignore                              # Agregado .env.*
-.github/workflows/ci.yml               # Security hardening
-infra/lib/ig-api-stack.js              # TTL, packaging, throttling, alarms
-src/app.js                              # Body size limit
-src/middleware/authenticate.js          # Timing-safe comparison
-src/middleware/errorHandler.js          # Log level differentiation
-src/repositories/postRepository.js      # BatchWriteCommand
-src/services/metaApi.js                # encodeURIComponent
-docs/decisions.md                      # 7 nuevas decisions
-docs/roadmap.md                        # Phase 6 items expandidos
-docs/session-context.md                # Este archivo
+.github/workflows/ci.yml       # CI/CD pipeline (OIDC, Node.js 24)
+infra/lib/ig-api-stack.js       # CDK stack (Lambda, API Gateway, DynamoDB)
+lambda.js                       # Lambda handler
+src/app.js                      # Express app
 ```
