@@ -106,7 +106,7 @@ jobs:
           AUTH_API_KEY: ${{ secrets.AUTH_API_KEY }}
           APP_LOG_LEVEL: info
           POST_VERIFICATION_HOURS: "24"
-        run: pnpm exec cdk deploy --require-approval broadening --outputs-file cdk-outputs.json
+        run: pnpm exec cdk deploy --require-approval never --outputs-file cdk-outputs.json
 
       - name: Output API URL
         run: |
