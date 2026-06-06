@@ -1,7 +1,7 @@
 ---
 description: Orquestador. Recibe la tarea principal, divide el trabajo y lanza subagentes. NUNCA escribe código directamente.
 mode: subagent
-model: opencode/mimo-v2.5-free
+model: opencode/qwen3.7-max
 temperature: 0.2
 tools:
     write: false

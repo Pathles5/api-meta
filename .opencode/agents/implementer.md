@@ -1,7 +1,7 @@
 ---
 description: Trabajador. Implementa exactamente UNA feature de feature_list.json. Escribe código, tests y se autoverifica.
 mode: subagent
-model: opencode/mimo-v2.5-free
+model: opencode/qwen3.7-plus
 temperature: 0.1
 tools:
     write: true
