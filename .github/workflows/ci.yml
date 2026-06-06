@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [dev, pre, int, pro]
   pull_request:
-    branches: [main]
+    branches: [dev, pre, int, pro]
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -51,7 +51,9 @@ jobs:
   deploy:
     needs: lint-and-test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref != 'refs/heads/dev' && github.event_name == 'push'
+    env:
+      IG_ENV: ${{ github.ref_name }}
     permissions:
       id-token: write
       contents: read
@@ -97,7 +99,7 @@ jobs:
       - name: Build production bundle
         run: |
           mkdir -p dist
-          cp -r src lambda.js dist/
+          cp -r src lambda.js pnpm-lock.yaml dist/
           # Strip devEngines (blocks npm; pnpm restriction not needed at runtime)
           jq 'del(.devEngines)' package.json > dist/package.json
           cd dist
@@ -117,13 +119,16 @@ jobs:
         run: |
           set -euo pipefail
 
+          STACK_NAME="ig-api-${IG_ENV}"
+          TABLE_NAME="ig-posts-${IG_ENV}"
+
           echo "========================================"
           echo " PRE-DEPLOY HEALTH CHECK"
           echo "========================================"
 
           # 1. Verify if the CloudFormation stack exists
           STACK_STATUS=$(aws cloudformation describe-stacks \
-            --stack-name ig-api \
+            --stack-name "${STACK_NAME}" \
             --region eu-west-1 \
             --query 'Stacks[0].StackStatus' \
             --output text 2>/dev/null || echo "NOT_FOUND")
@@ -131,7 +136,7 @@ jobs:
 
           # 2. Verify if the DynamoDB table exists
           TABLE_STATUS=$(aws dynamodb describe-table \
-            --table-name ig-posts \
+            --table-name "${TABLE_NAME}" \
             --region eu-west-1 \
             --query 'Table.TableStatus' \
             --output text 2>/dev/null || echo "NOT_FOUND")
@@ -140,7 +145,7 @@ jobs:
           # 3. Detect drift if the stack exists
           if [ "$STACK_STATUS" != "NOT_FOUND" ]; then
             DRIFT_STATUS=$(aws cloudformation detect-stack-drift \
-              --stack-name ig-api \
+              --stack-name "${STACK_NAME}" \
               --region eu-west-1 \
               --query 'StackDriftDetectionId' \
               --output text 2>/dev/null || echo "DRIFT_CHECK_FAILED")
@@ -153,12 +158,12 @@ jobs:
           elif [ "$STACK_STATUS" = "CREATE_COMPLETE" ] || [ "$STACK_STATUS" = "UPDATE_COMPLETE" ]; then
             if [ "$TABLE_STATUS" = "NOT_FOUND" ]; then
               echo ""
-              echo " WARNING: Stack exists but DynamoDB table 'ig-posts' is MISSING."
+              echo " WARNING: Stack exists but DynamoDB table '\' is MISSING."
               echo " This indicates possible drift (table may have been deleted manually)."
               echo ""
               echo " CDK deploy will attempt to recreate the table."
               echo " If deploy fails, run:"
-              echo "   aws cloudformation continue-update-rollback --stack-name ig-api --region eu-west-1"
+              echo "   aws cloudformation continue-update-rollback --stack-name "${STACK_NAME}" --region eu-west-1"
               echo ""
             else
               echo "Stack and table exist. Normal update deploy."
@@ -169,7 +174,7 @@ jobs:
             echo " This means a previous deployment failed and the stack rolled back."
             echo ""
             echo " To recover, run:"
-            echo "   aws cloudformation continue-update-rollback --stack-name ig-api --region eu-west-1"
+            echo "   aws cloudformation continue-update-rollback --stack-name "${STACK_NAME}" --region eu-west-1"
             echo ""
             exit 1
           else
