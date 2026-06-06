@@ -354,6 +354,56 @@ Configure these in your repository: **Settings → Secrets and variables → Act
 pnpm cdk deploy --require-approval never
 ```
 
+## 🌍 Entornos
+
+El proyecto soporta múltiples entornos con stacks CDK independientes:
+
+| Entorno | Stack | Stage | Branch | Descripción |
+|---------|-------|-------|--------|-------------|
+| `dev` | N/A | N/A | `dev` | Desarrollo local |
+| `pre` | `ig-api-pre` | `pre` | `pre` | Preproducción (AWS) |
+| `int` | `ig-api-int` | `int` | `int` | Integración (AWS) |
+| `pro` | `ig-api-pro` | `pro` | `pro` | Producción (AWS) |
+
+### Desplegar a un entorno específico
+
+```bash
+# Desplegar a pre (default)
+pnpm cdk deploy
+
+# Desplegar a pro
+IG_ENV=pro pnpm cdk deploy
+
+# Desplegar a int
+IG_ENV=int pnpm cdk deploy
+```
+
+Cada entorno tiene su propia tabla DynamoDB, Lambda, API Gateway y CloudWatch Dashboard.
+
+### Flujo de trabajo con branches
+
+```bash
+# Desarrollo local
+git checkout dev
+# ... hacer cambios ...
+git push origin dev
+
+# Desplegar a pre
+git checkout pre
+git merge dev
+git push origin pre  # → deploy automático
+
+# Desplegar a int
+git checkout int
+git merge pre
+git push origin int  # → deploy automático
+
+# Desplegar a pro (con approval)
+git checkout pro
+git merge int
+git push origin pro  # → deploy con approval manual
+```
+
 ## Documentation
 
 - [Project Context](PROJECT_CONTEXT.md)

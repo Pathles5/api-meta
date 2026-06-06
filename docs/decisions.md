@@ -808,6 +808,37 @@ GitHub Actions (CI/CD)
 
 ---
 
+## 2026-06-06: Estrategia de Entornos
+
+### Decision: Stacks CDK Independientes por Entorno
+
+**Context**: El proyecto necesita múltiples entornos (dev, pre, int, pro) con aislamiento completo de recursos.
+
+**Decision**: Usar stacks CDK separados por entorno (`ig-api-pre`, `ig-api-int`, `ig-api-pro`), cada uno con sus propios recursos (Lambda, API Gateway, DynamoDB, CloudWatch). El entorno `dev` es local y no tiene stack en AWS.
+
+**Rationale**:
+- Aislamiento total entre entornos (datos, configuración, URLs)
+- Despliegue independiente sin riesgo de afectar otros entornos
+- Nombres de recursos únicos automáticamente (usan `${id}` = stack name)
+- Dentro del AWS Free Tier para 2-3 entornos
+
+**Alternatives considered**:
+- Stack único con parámetros: Rechazada (no se pueden desplegar múltiples instancias del mismo stack)
+- CDK Pipelines + Stages: Rechazada (over-engineering, CodePipeline tiene costo)
+
+**Implementation**:
+- Variable `IG_ENV` controla el entorno activo (default: `pre`)
+- Stack name dinámico: `ig-api-${IG_ENV}`
+- Table name dinámico: `ig-posts-${IG_ENV}`
+- Stage name en API Gateway: `${IG_ENV}` (no hardcodeado como `prod`)
+- Cada entorno tiene su propia branch: `dev`, `pre`, `int`, `pro`
+
+**Consequences**:
+- Positivas: Aislamiento, claridad, fácil de entender
+- Negativas: Más stacks que gestionar (pero CDK lo automatiza)
+
+---
+
 ## Pending Items
 
 - [x] ~~Update Meta Graph API from v19.0 to v24.0~~ ✅ Completed

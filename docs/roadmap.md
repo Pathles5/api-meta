@@ -62,26 +62,22 @@ API REST para integrar con Meta/Instagram, con persistencia en DynamoDB y despli
 
 ---
 
-## Fase 7: Webhooks 🔴
-**Estado**: Listo para implementar
-**Dependencias**: Fase 6 completada (endpoint HTTPS disponible)
-**Objetivo**: Recibir eventos de Instagram (publicaciones, notificaciones)
-**Items clave**:
-- Endpoint POST /webhooks
-- Validación de firma de webhook
+## Fase 7: Webhooks ✅
+**Estado**: Completado (Junio 2026)
+- Endpoint POST /webhooks con validación HMAC-SHA256
 - Challenge-response para suscripción
-- Procesamiento de eventos entrantes
+- Procesador de eventos de Instagram
+- 22 tests pasando
 
 ---
 
-## Fase 8: Production Readiness ⚪
-**Estado**: Pendiente
-**Objetivo**: Preparar para producción
-**Items clave**:
-- Monitoreo y alertas avanzadas
-- Documentación de API (OpenAPI/Swagger)
-- Revisión de costos y optimización
-- Testing de carga y estrés
+## Fase 8: Production Readiness ✅
+**Estado**: Completado (Junio 2026)
+- OpenAPI spec (`docs/openapi.yaml`)
+- CloudWatch Dashboard con 6 widgets
+- Análisis de costos (`docs/cost-analysis.md`)
+- Pre-deploy health check en CI/CD
+- Estrategia de entornos (dev, pre, int, pro)
 
 ---
 

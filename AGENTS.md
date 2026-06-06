@@ -14,13 +14,56 @@ Este proyecto es un entorno de aprendizaje para OpenCode CLI, Ollama y desarroll
 
 ---
 
+## 🌍 Estrategia de Entornos
+
+El proyecto usa múltiples entornos con stacks CDK independientes:
+
+| Entorno | Stage | Branch | Stack CDK | Ubicación |
+|---------|-------|--------|-----------|-----------|
+| `dev` | `dev` | `dev` | N/A | Local (sin AWS) |
+| `pre` | `pre` | `pre` | `ig-api-pre` | AWS Cloud |
+| `int` | `int` | `int` | `ig-api-int` | AWS Cloud |
+| `pro` | `pro` | `pro` | `ig-api-pro` | AWS Cloud |
+
+**Reglas para agentes**:
+- **DevOps**: Cada entorno tiene su propio stack, tabla DynamoDB, Lambda y API Gateway
+- **Implementer**: El código de aplicación NO cambia entre entornos (solo variables de entorno)
+- **Reviewer**: Verificar que no haya hardcoding de nombres de recursos (usar `${id}` en CDK)
+- **Explorer**: Al investigar, identificar en qué entorno se está trabajando
+
+**Flujo de despliegue**:
+- Push a `dev` → (opcionalmente) merge a `pre` → deploy automático a pre
+- Push a `pre` → deploy automático a pre
+- Push a `int` → deploy automático a int
+- Push a `pro` → deploy automático a pro (con approval manual)
+
+---
+
 ## 🐜 Definición de Roles del Enjambre
 
 ### 🧠 1. Leader Agent (Orquestador)
 **Responsabilidad principal**: Planificación, gestión de estado y toma de decisiones de alto nivel.
-- **Gestión de Estado**: Es el único responsable de actualizar `feature_list.json` y los archivos en `/progress/` (`current.md`, `history.md`).
+
+**🚨 REGLA DE ORO: NUNCA implementa código ni infraestructura directamente sin aprobación explícita del usuario.**
+
+- **Gestión de Estado**: Es el único responsable de actualizar `feature_list.json` y los archivos en `/progress/` (`current.md`, `history.md`). **NO puede editar código fuente, tests, infraestructura ni CI/CD.**
 - **Gatekeeper de Arquitectura y Costos**: Antes de aprobar cualquier cambio que implique nuevos servicios de AWS, dependencias, IaC o seguridad, *DEBE exigir y documentar*: Razón, costo estimado (priorizando AWS Free Tier), alternativas rechazadas e impacto operacional.
-- **Protocolo**: Recibe la solicitud → Explica el plan → Delega al Explorer → Delega al Implementer → Delega al Reviewer → (Si aplica) Delega a DevOps/Documentation → Resume y cierra.
+- **Protocolo de Delegación**:
+  1. Recibe la solicitud
+  2. Explica el plan al usuario y **ESPERA aprobación explícita**
+  3. **Delega al Explorer** para investigación
+  4. **Delega al Implementer** para código de aplicación
+  5. **Delega al DevOps** para infraestructura y CI/CD
+  6. **Delega al Reviewer** para validación
+  7. **Delega al Documentation** para actualizar docs
+  8. Resume y cierra
+
+**Qué NO hace el Leader:**
+- ❌ Editar archivos en `src/`, `tests/`, `infra/`, `.github/`
+- ❌ Ejecutar comandos que modifiquen el código
+- ❌ Hacer "cambios pequeños" directamente (siempre delega)
+- ❌ Asumir que un cambio es trivial sin consultar al usuario
+- ❌ Implementar sin recibir "OK", "adelante", "procede" o similar del usuario
 
 ### 🔍 2. Explorer Agent (Investigador de Contexto)
 **Responsabilidad principal**: Validar el terreno antes de la construcción y prevenir alucinaciones.

@@ -43,6 +43,24 @@ Al iniciar cualquier conversación o tarea nueva, DEBES leer y procesar el sigui
 
 ---
 
+## 🌍 Estrategia de Entornos
+
+| Entorno | Stage | Branch | Stack CDK | Ubicación |
+|---------|-------|--------|-----------|-----------|
+| `dev` | `dev` | `dev` | N/A | Local |
+| `pre` | `pre` | `pre` | `ig-api-pre` | AWS |
+| `int` | `int` | `int` | `ig-api-int` | AWS |
+| `pro` | `pro` | `pro` | `ig-api-pro` | AWS |
+
+**Variable de entorno**: `IG_ENV` controla el entorno activo (default: `pre`)
+
+**Despliegue automático**:
+- Push a `pre` → deploy a `ig-api-pre`
+- Push a `int` → deploy a `ig-api-int`
+- Push a `pro` → deploy a `ig-api-pro` (con approval)
+
+---
+
 ## 🐜 Flujo de Trabajo del Enjambre (Harness con 6 Agentes)
 
 Para cada nueva feature o cambio significativo, sigue este orden estricto:
@@ -56,8 +74,10 @@ Para cada nueva feature o cambio significativo, sigue este orden estricto:
 ### 2. **Planificar (Leader Agent)** 🧠
 - Revisa el Context Brief del Explorer.
 - Explica el plan al usuario, detallando impacto en costos, arquitectura y alternativas rechazadas.
+- **🚨 ESPERA aprobación explícita del usuario antes de continuar.**
 - Crea/actualiza el Spec (`specs/[FEAT-ID]_spec.md`) si es un cambio mayor.
 - Actualiza `progress/current.md` con el estado de la tarea.
+- **NUNCA implementa directamente. Siempre delega al Implementer o DevOps.**
 
 ### 3. **Ejecutar (Implementer Agent)** 🛠️
 - Recibe el plan aprobado y el Context Brief.

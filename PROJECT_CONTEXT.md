@@ -6,9 +6,10 @@
 - **Objetivo Primario**: Aprender cómo operan los agentes de desarrollo de software en un proyecto del mundo real, priorizando cambios pequeños e iterativos.
 
 ## 🎯 Estado Actual y Hoja de Ruta
-- **Completado**: Persistencia de eventos (Fase 4), Gestión de persistencia de posts y verificación diaria de existencia (Fase 5).
-- **Enfoque Actual**: Endpoint REST para recuperar posts y asegurar la API.
-- **Futuro**: Webhooks de eventos y optimización de almacenamiento multimedia.
+- **Completado**: Todas las fases (0-8), incluyendo webhooks y production readiness
+- **Estado actual**: Desplegado en AWS (entorno `pre`), stack `ig-api-pre`
+- **Próximo**: Configurar webhooks en Meta for Developers, probar en producción
+- **Entornos**: `dev` (local), `pre` (AWS), `int` (AWS), `pro` (AWS)
 
 ## ⚠️ Restricciones No Negociables
 1. **Alcance**: Mantener el proyecto pequeño. Claridad sobre complejidad.
