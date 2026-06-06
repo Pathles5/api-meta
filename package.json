@@ -37,8 +37,6 @@
     "devDependencies":  {
                             "@eslint/js":  "^10.0.1",
                             "aws-cdk":  "^2.1125.0",
-                            "aws-cdk-lib":  "^2.257.0",
-                            "constructs":  "^10.6.0",
                             "eslint":  "^10.4.1"
                         },
     "dependencies":  {
@@ -47,6 +45,8 @@
                          "@vendia/serverless-express":  "^4.12.6",
                          "dotenv":  "^17.4.2",
                          "express":  "^5.2.1",
-                         "pino":  "^10.3.1"
+                         "pino": "^10.3.1",
+                         "aws-cdk-lib": "^2.257.0",
+                         "constructs": "^10.6.0"
                      }
 }
