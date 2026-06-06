@@ -98,7 +98,7 @@ jobs:
           # Strip devEngines (blocks npm; pnpm restriction not needed at runtime)
           jq 'del(.devEngines)' package.json > dist/package.json
           cd dist
-          pnpm install --omit=dev --ignore-scripts
+          pnpm install --prod --ignore-scripts
           echo "Bundle size: $(du -sh . | cut -f1)"
           ls -la
 
