@@ -105,7 +105,7 @@ jobs:
       - name: CDK Bootstrap (if needed)
         run: |
           if ! aws cloudformation describe-stacks --stack-name CDKToolkit --region eu-west-1 2>/dev/null; then
-            pnpm dlx cdk bootstrap
+            ./node_modules/.bin/cdk bootstrap
           else
             echo "CDKToolkit stack already exists, skipping bootstrap"
           fi
@@ -119,7 +119,7 @@ jobs:
           META_VERIFY_TOKEN: ${{ secrets.META_VERIFY_TOKEN }}
           APP_LOG_LEVEL: info
           POST_VERIFICATION_HOURS: "24"
-        run: pnpm dlx cdk deploy --require-approval never --outputs-file cdk-outputs.json
+        run: ./node_modules/.bin/cdk deploy --require-approval never --outputs-file cdk-outputs.json
 
       - name: Output API URL
         run: |
