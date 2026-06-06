@@ -91,6 +91,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install AWS CDK CLI
+        run: npm install -g aws-cdk
+
       - name: Build production bundle
         run: |
           mkdir -p dist
@@ -105,7 +108,7 @@ jobs:
       - name: CDK Bootstrap (if needed)
         run: |
           if ! aws cloudformation describe-stacks --stack-name CDKToolkit --region eu-west-1 2>/dev/null; then
-            pnpm run cdk bootstrap
+            cdk bootstrap
           else
             echo "CDKToolkit stack already exists, skipping bootstrap"
           fi
@@ -119,7 +122,7 @@ jobs:
           META_VERIFY_TOKEN: ${{ secrets.META_VERIFY_TOKEN }}
           APP_LOG_LEVEL: info
           POST_VERIFICATION_HOURS: "24"
-        run: pnpm run cdk deploy --require-approval never --outputs-file cdk-outputs.json
+        run: cdk deploy --require-approval never --outputs-file cdk-outputs.json
 
       - name: Output API URL
         run: |
