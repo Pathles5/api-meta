@@ -13,7 +13,7 @@ export class IgApiStack extends Stack {
   constructor(scope, id, props = {}) {
     super(scope, id, props);
 
-    const { tableName, metaAccessToken, igUserId, authApiKey, verificationHours, logLevel, metaAppSecret, metaVerifyToken } =
+    const { tableName, environment, metaAccessToken, igUserId, authApiKey, verificationHours, logLevel, metaAppSecret, metaVerifyToken } =
       props;
 
     const table = new Table(this, `${id}-posts-table`, {
@@ -65,7 +65,7 @@ export class IgApiStack extends Stack {
       handler: lambda,
       proxy: false,
       deployOptions: {
-        stageName: "prod",
+        stageName: environment,
         loggingLevel: MethodLoggingLevel.INFO,
         throttlingRateLimit: 100,
         throttlingBurstLimit: 200,
