@@ -1,0 +1,341 @@
+﻿openapi: 3.1.0
+info:
+  title: IG-API - Instagram REST API
+  description: REST API that integrates with Meta Instagram Graph API to retrieve posts and handle webhook events
+  version: 1.0.0
+  contact:
+    name: IG-API Support
+
+servers:
+  - url: https://{api-id}.execute-api.eu-west-1.amazonaws.com/prod
+    description: Production (AWS API Gateway)
+    variables:
+      api-id:
+        description: API Gateway ID
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: API key for /posts endpoints
+    WebhookSignature:
+      type: apiKey
+      in: header
+      name: x-hub-signature-256
+      description: HMAC-SHA256 signature for /webhooks POST
+
+  schemas:
+    Post:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Instagram post ID
+        caption:
+          type: string
+          description: Post caption
+        mediaType:
+          type: string
+          enum: [IMAGE, VIDEO, CAROUSEL_ALBUM]
+        mediaUrl:
+          type: string
+          format: uri
+          description: CDN URL for media
+        permalink:
+          type: string
+          format: uri
+          description: Instagram permalink
+        timestamp:
+          type: string
+          format: date-time
+        likeCount:
+          type: integer
+        commentsCount:
+          type: integer
+        lastVerificationDate:
+          type: string
+          format: date-time
+          description: Last time post was verified against Meta API
+        expiresAt:
+          type: integer
+          description: DynamoDB TTL timestamp
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        statusCode:
+          type: integer
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: getHealth
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /posts:
+    get:
+      summary: List posts from Meta API
+      operationId: listPosts
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Number of posts to fetch
+      responses:
+        '200':
+          description: List of posts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      "$ref": '#/components/schemas/Post'
+                  paging:
+                    type: object
+        '400':
+          description: Invalid limit parameter
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/Error'
+        '401':
+          description: Missing API key
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/Error'
+        '403':
+          description: Invalid API key
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/Error'
+        '500':
+          description: Meta API error
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/Error'
+
+  /posts/{id}:
+    get:
+      summary: Get single post by ID
+      operationId: getPost
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Instagram post ID
+      responses:
+        '200':
+          description: Post details
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/Post'
+        '400':
+          description: Invalid post ID
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/Error'
+        '401':
+          description: Missing or invalid API key
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/Error'
+        '404':
+          description: Post not found
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/Error'
+
+  /posts/sync:
+    post:
+      summary: Sync posts from Meta API to DynamoDB
+      operationId: syncPosts
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 100
+                  default: 20
+      responses:
+        '200':
+          description: Sync completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  synced:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      "$ref": '#/components/schemas/Post'
+        '400':
+          description: Invalid limit
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/Error'
+        '401':
+          description: Missing or invalid API key
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/Error'
+
+  /posts/verify:
+    post:
+      summary: Verify stale posts against Meta API
+      operationId: verifyPosts
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 100
+                  default: 50
+      responses:
+        '200':
+          description: Verification completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                  verified:
+                    type: integer
+                  deleted:
+                    type: integer
+                  rateLimited:
+                    type: integer
+                  errors:
+                    type: integer
+        '400':
+          description: Invalid limit
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/Error'
+        '401':
+          description: Missing or invalid API key
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/Error'
+
+  /webhooks:
+    get:
+      summary: Webhook subscription verification (Meta challenge-response)
+      operationId: verifyWebhookSubscription
+      parameters:
+        - name: hub.mode
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [subscribe]
+        - name: hub.challenge
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: hub.verify_token
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Challenge returned
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Invalid mode or token
+          content:
+            text/plain:
+              schema:
+                type: string
+
+    post:
+      summary: Receive webhook events from Meta
+      operationId: receiveWebhookEvent
+      security:
+        - WebhookSignature: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Meta webhook payload
+      responses:
+        '200':
+          description: Event received (always returns 200 to Meta)
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: EVENT_RECEIVED
+        '401':
+          description: Invalid signature
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/Error'

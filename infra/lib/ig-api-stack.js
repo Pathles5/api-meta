@@ -1,5 +1,5 @@
 import { Duration, Stack } from "aws-cdk-lib";
-import { Alarm } from "aws-cdk-lib/aws-cloudwatch";
+import { Alarm, Dashboard, GraphWidget } from "aws-cdk-lib/aws-cloudwatch";
 import {
   LambdaRestApi,
   EndpointType,
@@ -13,7 +13,7 @@ export class IgApiStack extends Stack {
   constructor(scope, id, props = {}) {
     super(scope, id, props);
 
-    const { tableName, metaAccessToken, igUserId, authApiKey, verificationHours, logLevel } =
+    const { tableName, metaAccessToken, igUserId, authApiKey, verificationHours, logLevel, metaAppSecret, metaVerifyToken } =
       props;
 
     const table = new Table(this, `${id}-posts-table`, {
@@ -28,21 +28,7 @@ export class IgApiStack extends Stack {
       runtime: Runtime.NODEJS_22_X,
       architecture: Architecture.ARM_64,
       handler: "lambda.handler",
-      code: Code.fromAsset(resolve(import.meta.dirname, "../../"), {
-        exclude: [
-          "infra/**",
-          "tests/**",
-          "tools/**",
-          ".github/**",
-          "docs/**",
-          "scripts/**",
-          ".env",
-          ".env.*",
-          "*.md",
-          "cdk.out/**",
-          "node_modules/.cache/**",
-        ],
-      }),
+      code: Code.fromAsset(resolve(import.meta.dirname, "../../dist")),
       memorySize: 256,
       timeout: Duration.seconds(30),
       environment: {
@@ -52,6 +38,8 @@ export class IgApiStack extends Stack {
         AUTH_API_KEY: authApiKey,
         POST_VERIFICATION_HOURS: verificationHours,
         APP_LOG_LEVEL: logLevel,
+        META_APP_SECRET: metaAppSecret,
+        META_VERIFY_TOKEN: metaVerifyToken,
         NODE_ENV: "production",
       },
     });
@@ -100,6 +88,54 @@ export class IgApiStack extends Stack {
 
     const postsVerify = posts.addResource("verify");
     postsVerify.addMethod("POST");
+
+    const webhooks = api.root.addResource("webhooks");
+    webhooks.addMethod("GET");
+    webhooks.addMethod("POST");
+
+    // CloudWatch Dashboard
+    const dashboard = new Dashboard(this, `${id}-dashboard`, {
+      dashboardName: `${id}-monitoring`,
+    });
+
+    dashboard.addWidgets(
+      new GraphWidget({
+        title: "Lambda Invocations",
+        left: [lambda.metricInvocations({ period: Duration.minutes(5) })],
+        width: 12,
+      }),
+      new GraphWidget({
+        title: "Lambda Duration (p95)",
+        left: [lambda.metricDuration({ period: Duration.minutes(5), statistic: "p95" })],
+        width: 12,
+      }),
+    );
+
+    dashboard.addWidgets(
+      new GraphWidget({
+        title: "Lambda Errors",
+        left: [lambda.metricErrors({ period: Duration.minutes(5) })],
+        width: 12,
+      }),
+      new GraphWidget({
+        title: "Lambda Throttles",
+        left: [lambda.metricThrottles({ period: Duration.minutes(5) })],
+        width: 12,
+      }),
+    );
+
+    dashboard.addWidgets(
+      new GraphWidget({
+        title: "API Gateway 4XX Errors",
+        left: [api.metricClientError({ period: Duration.minutes(5) })],
+        width: 12,
+      }),
+      new GraphWidget({
+        title: "API Gateway 5XX Errors",
+        left: [api.metricServerError({ period: Duration.minutes(5) })],
+        width: 12,
+      }),
+    );
 
     this.apiUrl = api.url;
   }
