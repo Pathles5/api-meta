@@ -41,7 +41,7 @@ temp/
 
 # AI tools (auto-generated)
 .agents/
-.opencode/
+.opencode/node_modules
 skills-lock.json
 
 # DynamoDB Local

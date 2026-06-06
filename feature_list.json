@@ -1,0 +1,179 @@
+{
+  "project": "IG-API",
+  "version": "1.0",
+  "last_updated": "2026-06-06",
+  
+  "features": [
+    {
+      "id": "FEAT-001",
+      "title": "Foundation Setup",
+      "description": "Project initialization, ESLint, directory structure",
+      "status": "completed",
+      "phase": 0,
+      "assigned_agent": "implementer",
+      "completed_date": "2026-05-31"
+    },
+    {
+      "id": "FEAT-002",
+      "title": "Basic REST API",
+      "description": "Express.js 5, health check, error handling, validation",
+      "status": "completed",
+      "phase": 1,
+      "assigned_agent": "implementer",
+      "completed_date": "2026-05-31"
+    },
+    {
+      "id": "FEAT-003",
+      "title": "Meta API Integration",
+      "description": "Graph API v24.0, GET /posts, GET /posts/:id, error handling",
+      "status": "completed",
+      "phase": 2,
+      "assigned_agent": "implementer",
+      "completed_date": "2026-05-31"
+    },
+    {
+      "id": "FEAT-004",
+      "title": "Security Implementation",
+      "description": "API Key auth, rate limiting, CORS, request logging",
+      "status": "completed",
+      "phase": 3,
+      "assigned_agent": "implementer",
+      "completed_date": "2026-05-31"
+    },
+    {
+      "id": "FEAT-005",
+      "title": "Data Persistence",
+      "description": "DynamoDB on-demand, repository pattern, TTL",
+      "status": "completed",
+      "phase": 4,
+      "assigned_agent": "implementer",
+      "completed_date": "2026-05-31"
+    },
+    {
+      "id": "FEAT-006",
+      "title": "Post Management",
+      "description": "On-demand verification, deletion on 404, batch verify",
+      "status": "completed",
+      "phase": 5,
+      "assigned_agent": "implementer",
+      "completed_date": "2026-05-31"
+    },
+    {
+      "id": "FEAT-007",
+      "title": "Infrastructure & Deployment",
+      "description": "CDK + Lambda + API Gateway, GitHub Actions CI/CD with OIDC",
+      "status": "completed",
+      "phase": 6,
+      "assigned_agent": "devops",
+      "completed_date": "2026-06-01"
+    },
+    {
+      "id": "FEAT-008",
+      "title": "Webhook Endpoint",
+      "description": "POST /webhooks endpoint to receive Instagram events",
+      "status": "pending",
+      "phase": 7,
+      "assigned_agent": "none",
+      "dependencies": ["FEAT-007"],
+      "priority": "high",
+      "estimated_effort": "medium"
+    },
+    {
+      "id": "FEAT-009",
+      "title": "Webhook Signature Validation",
+      "description": "Validate incoming webhook signatures using app secret",
+      "status": "pending",
+      "phase": 7,
+      "assigned_agent": "none",
+      "dependencies": ["FEAT-008"],
+      "priority": "high",
+      "estimated_effort": "small"
+    },
+    {
+      "id": "FEAT-010",
+      "title": "Webhook Subscription Verification",
+      "description": "Handle challenge-response for webhook subscription",
+      "status": "pending",
+      "phase": 7,
+      "assigned_agent": "none",
+      "dependencies": ["FEAT-008"],
+      "priority": "high",
+      "estimated_effort": "small"
+    },
+    {
+      "id": "FEAT-011",
+      "title": "Process Incoming Webhook Events",
+      "description": "Handle publication and notification events from Instagram",
+      "status": "pending",
+      "phase": 7,
+      "assigned_agent": "none",
+      "dependencies": ["FEAT-009", "FEAT-010"],
+      "priority": "medium",
+      "estimated_effort": "large"
+    },
+    {
+      "id": "FEAT-012",
+      "title": "CloudWatch Monitoring & Alerts",
+      "description": "Advanced monitoring, custom metrics, alerting",
+      "status": "pending",
+      "phase": 8,
+      "assigned_agent": "none",
+      "dependencies": ["FEAT-011"],
+      "priority": "medium",
+      "estimated_effort": "medium"
+    },
+    {
+      "id": "FEAT-013",
+      "title": "API Documentation",
+      "description": "OpenAPI/Swagger documentation for all endpoints",
+      "status": "pending",
+      "phase": 8,
+      "assigned_agent": "none",
+      "dependencies": ["FEAT-011"],
+      "priority": "low",
+      "estimated_effort": "medium"
+    },
+    {
+      "id": "FEAT-014",
+      "title": "Cost Review & Optimization",
+      "description": "Analyze AWS costs, optimize resources, ensure Free Tier",
+      "status": "pending",
+      "phase": 8,
+      "assigned_agent": "none",
+      "dependencies": ["FEAT-011"],
+      "priority": "medium",
+      "estimated_effort": "small"
+    },
+    {
+      "id": "FEAT-015",
+      "title": "Load & Stress Testing",
+      "description": "Performance testing, identify bottlenecks",
+      "status": "pending",
+      "phase": 8,
+      "assigned_agent": "none",
+      "dependencies": ["FEAT-011"],
+      "priority": "low",
+      "estimated_effort": "large"
+    }
+  ],
+  
+  "valid_statuses": ["pending", "in_progress", "review", "completed", "blocked", "deferred"],
+  
+  "phase_summary": {
+    "0": { "name": "Foundation", "status": "completed" },
+    "1": { "name": "Basic REST API", "status": "completed" },
+    "2": { "name": "Meta API Integration", "status": "completed" },
+    "3": { "name": "Security", "status": "completed" },
+    "4": { "name": "Data Persistence", "status": "completed" },
+    "5": { "name": "Post Management", "status": "completed" },
+    "6": { "name": "Infrastructure & Deployment", "status": "completed" },
+    "7": { "name": "Webhooks", "status": "ready" },
+    "8": { "name": "Production Readiness", "status": "pending" }
+  },
+  
+  "next_actions": [
+    "FEAT-008: Webhook Endpoint (Phase 7)",
+    "FEAT-009: Webhook Signature Validation (Phase 7)",
+    "FEAT-010: Webhook Subscription Verification (Phase 7)"
+  ]
+}

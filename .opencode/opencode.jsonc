@@ -1,0 +1,117 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  
+  "experimental": {
+    "hook": {
+      // Ejecutar tests después de editar cualquier archivo JS
+      "file_edited": {
+        "src/**/*.js": [
+          {
+            "command": ["pnpm", "test"],
+            "description": "Ejecutar tests tras modificar código fuente"
+          }
+        ],
+        "infra/**/*.js": [
+          {
+            "command": ["pnpm", "cdk", "synth", "--no-lookups"],
+            "description": "Validar síntesis de CDK tras modificar infraestructura"
+          }
+        ]
+      },
+      
+      // Ejecutar init.js al finalizar la sesión
+      "session_completed": [
+        {
+          "command": ["node", "init.js"],
+          "description": "Validación completa del proyecto al cerrar sesión"
+        }
+      ]
+    }
+  },
+  
+  "permission": {
+    "bash": {
+      // Comandos de validación: permitir sin preguntar
+      "node init.js": "allow",
+      "pnpm test*": "allow",
+      "pnpm lint*": "allow",
+      "pnpm cdk synth*": "allow",
+      
+      // Comandos de despliegue: preguntar antes
+      "pnpm cdk deploy*": "ask",
+      "pnpm cdk destroy*": "ask",
+      
+      // Comandos peligrosos: bloquear
+      "rm -rf *": "deny",
+      "git push*": "ask",
+      "git commit*": "ask",
+      
+      // Todo lo demás: preguntar
+      "*": "ask"
+    },
+    
+    // Permitir edición de archivos del proyecto
+    "edit": {
+      "src/**": "allow",
+      "tests/**": "allow",
+      "infra/**": "allow",
+      "docs/**": "allow",
+      "progress/**": "allow",
+      "feature_list.json": "allow",
+      "*": "ask"
+    },
+    
+    // Permitir lectura de todos los archivos
+    "read": "allow"
+  },
+  
+  // Configuración de agentes (opcional, pero recomendado)
+  "agent": {
+    "leader": {
+      "description": "Leader Agent - Orquestador y Arquitecto",
+      "model": "ollama/mimo-v2.5",
+      "temperature": 0.2,
+      "prompt": "You are the Leader Agent for IG-API project. Focus on planning, architecture, and orchestration. Do not write implementation code. Prioritize AWS Free Tier and simplicity.",
+      "permission": {
+        "bash": {
+          "node init.js": "allow",
+          "pnpm test*": "allow",
+          "*": "ask"
+        },
+        "edit": {
+          "feature_list.json": "allow",
+          "progress/**": "allow",
+          "*": "deny"
+        }
+      }
+    },
+    "implementer": {
+      "description": "Implementer Agent - Constructor de Código",
+      "model": "ollama/mimo-v2.5",
+      "temperature": 0.1,
+      "prompt": "You are the Implementer Agent. Write clean, simple, maintainable Node.js code. Use PNPM, relative paths, and follow project conventions strictly.",
+      "permission": {
+        "bash": {
+          "pnpm *": "allow",
+          "node --test*": "allow",
+          "*": "ask"
+        },
+        "edit": "allow"
+      }
+    },
+    "reviewer": {
+      "description": "Reviewer Agent - Auditor de Calidad",
+      "model": "ollama/mimo-v2.5",
+      "temperature": 0.1,
+      "prompt": "You are the Reviewer Agent. Focus on code quality, security, and adherence to standards. Do not modify files. Provide actionable feedback.",
+      "permission": {
+        "bash": {
+          "pnpm lint*": "allow",
+          "pnpm test*": "allow",
+          "*": "ask"
+        },
+        "edit": "deny"
+      }
+    }
+  }
+}
