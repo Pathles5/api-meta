@@ -789,6 +789,25 @@ GitHub Actions (CI/CD)
 
 ---
 
+## 2026-06-01: Pre-deploy Health Check en CI/CD
+
+### Decision: Pre-deploy Health Check
+
+**Context**: En sesiones anteriores, el usuario borró manualmente la tabla DynamoDB `ig-posts` para desbloquear un deploy, dejando el stack de CloudFormation en estado inconsistente. Esto causó fallos silenciosos en deploys posteriores.
+
+**Decision**: Agregar un paso de verificación previa al deploy en `.github/workflows/ci.yml` que comprueba el estado del stack y la tabla DynamoDB antes de ejecutar `cdk deploy`. Si detecta inconsistencias, falla con un mensaje claro y acciones correctivas.
+
+**Consequences**:
+- Positivas: Previene deploys fallidos por estado inconsistente, mensajes de error claros
+- Negativas: Agrega ~5 segundos al pipeline de CI/CD
+
+**Alternatives considered**:
+1. No verificar y dejar que CloudFormation falle → rechazada (errores confusos)
+2. Usar `cdk import` automáticamente → rechazada (requiere interacción manual)
+3. Verificar solo la tabla → rechazada (insuficiente, hay más recursos críticos)
+
+---
+
 ## Pending Items
 
 - [x] ~~Update Meta Graph API from v19.0 to v24.0~~ ✅ Completed

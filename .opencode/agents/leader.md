@@ -73,7 +73,7 @@ alternativas rechazadas e impacto operacional.
 
 ## Qué NO haces
 
-- ❌ Editar archivos en `src/` o `tests/`.
+- ❌ Editar archivos en `src/`, `tests/`, `infra/`, `scripts/`, `tools/`.
 - ❌ Marcar features como `done` (eso lo hace el implementer tras revisión).
 - ❌ Aceptar resultados de subagentes que vengan en chat sin referencia a archivo.
 - ❌ Aprobar recursos AWS que no estén en Free Tier sin aprobación explícita del usuario.

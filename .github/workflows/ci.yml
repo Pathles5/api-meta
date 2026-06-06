@@ -113,6 +113,78 @@ jobs:
             echo "CDKToolkit stack already exists, skipping bootstrap"
           fi
 
+      - name: Pre-deploy health check
+        run: |
+          set -euo pipefail
+
+          echo "========================================"
+          echo " PRE-DEPLOY HEALTH CHECK"
+          echo "========================================"
+
+          # 1. Verify if the CloudFormation stack exists
+          STACK_STATUS=$(aws cloudformation describe-stacks \
+            --stack-name ig-api \
+            --region eu-west-1 \
+            --query 'Stacks[0].StackStatus' \
+            --output text 2>/dev/null || echo "NOT_FOUND")
+          echo "Stack status: $STACK_STATUS"
+
+          # 2. Verify if the DynamoDB table exists
+          TABLE_STATUS=$(aws dynamodb describe-table \
+            --table-name ig-posts \
+            --region eu-west-1 \
+            --query 'Table.TableStatus' \
+            --output text 2>/dev/null || echo "NOT_FOUND")
+          echo "Table status: $TABLE_STATUS"
+
+          # 3. Detect drift if the stack exists
+          if [ "$STACK_STATUS" != "NOT_FOUND" ]; then
+            DRIFT_STATUS=$(aws cloudformation detect-stack-drift \
+              --stack-name ig-api \
+              --region eu-west-1 \
+              --query 'StackDriftDetectionId' \
+              --output text 2>/dev/null || echo "DRIFT_CHECK_FAILED")
+            echo "Drift detection ID: $DRIFT_STATUS"
+          fi
+
+          # 4. Decision logic
+          if [ "$STACK_STATUS" = "NOT_FOUND" ]; then
+            echo "Stack does not exist. Clean deploy."
+          elif [ "$STACK_STATUS" = "CREATE_COMPLETE" ] || [ "$STACK_STATUS" = "UPDATE_COMPLETE" ]; then
+            if [ "$TABLE_STATUS" = "NOT_FOUND" ]; then
+              echo ""
+              echo " WARNING: Stack exists but DynamoDB table 'ig-posts' is MISSING."
+              echo " This indicates possible drift (table may have been deleted manually)."
+              echo ""
+              echo " CDK deploy will attempt to recreate the table."
+              echo " If deploy fails, run:"
+              echo "   aws cloudformation continue-update-rollback --stack-name ig-api --region eu-west-1"
+              echo ""
+            else
+              echo "Stack and table exist. Normal update deploy."
+            fi
+          elif [ "$STACK_STATUS" = "ROLLBACK_COMPLETE" ] || [ "$STACK_STATUS" = "UPDATE_ROLLBACK_COMPLETE" ]; then
+            echo ""
+            echo " ERROR: Stack is in ROLLBACK state: $STACK_STATUS"
+            echo " This means a previous deployment failed and the stack rolled back."
+            echo ""
+            echo " To recover, run:"
+            echo "   aws cloudformation continue-update-rollback --stack-name ig-api --region eu-west-1"
+            echo ""
+            exit 1
+          else
+            echo ""
+            echo " ERROR: Stack in unexpected state: $STACK_STATUS"
+            echo " Manual intervention required."
+            echo " Check: https://eu-west-1.console.aws.amazon.com/cloudformation"
+            echo ""
+            exit 1
+          fi
+
+          echo "========================================"
+          echo " HEALTH CHECK COMPLETE"
+          echo "========================================"
+
       - name: CDK Deploy
         env:
           META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
