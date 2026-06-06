@@ -1,8 +1,7 @@
 ---
-name: documentation
 description: Maintains project documentation, decision records, and roadmap synchronization. Writes results to files, not chat.
 mode: subagent
-model: MiMo v2.5 Free
+model: opencode/mimo-v2.5-free
 temperature: 0.1
 tools:
     write: true

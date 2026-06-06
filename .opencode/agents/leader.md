@@ -1,8 +1,7 @@
 ---
-name: leader
 description: Orquestador. Recibe la tarea principal, divide el trabajo y lanza subagentes. NUNCA escribe código directamente.
 mode: subagent
-model: MiMo v2.5 Free
+model: opencode/mimo-v2.5-free
 temperature: 0.2
 tools:
     write: false

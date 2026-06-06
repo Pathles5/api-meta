@@ -1,7 +1,7 @@
 ---
 description: Designs and manages AWS CDK infrastructure, GitHub Actions CI/CD, and deployment safety
 mode: subagent
-model: MiMo v2.5 Free
+model: opencode/mimo-v2.5-free
 temperature: 0.1
 tools:
     write: true

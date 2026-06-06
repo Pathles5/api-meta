@@ -1,8 +1,7 @@
 ---
-name: reviewer
 description: Revisor automático. Aprueba o rechaza el trabajo del implementador comparándolo contra docs/architecture.md, docs/conventions.md y CHECKPOINTS.md.
 mode: subagent
-model: MiMo v2.5 Free
+model: opencode/mimo-v2.5-free
 temperature: 0.1
 tools:
     write: false

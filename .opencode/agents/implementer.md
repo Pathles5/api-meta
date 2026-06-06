@@ -1,8 +1,7 @@
 ---
-name: implementer
 description: Trabajador. Implementa exactamente UNA feature de feature_list.json. Escribe código, tests y se autoverifica.
 mode: subagent
-model: MiMo v2.5 Free
+model: opencode/mimo-v2.5-free
 temperature: 0.1
 tools:
     write: true

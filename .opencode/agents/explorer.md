@@ -1,8 +1,7 @@
 ---
-name: explorer
 description: Investigador. Analiza el código base y escribe hallazgos en archivos. No propone código.
 mode: subagent
-model: MiMo v2.5 Free
+model: opencode/mimo-v2.5-free
 temperature: 0.1
 tools:
     write: true  # Solo para escribir en progress/
