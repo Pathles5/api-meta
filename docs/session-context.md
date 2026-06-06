@@ -108,7 +108,7 @@ Token rotado y verificado.
 
 | Agente | Rol | Modelo | Estado |
 |--------|-----|--------|--------|
-| Leader | Orquestador | opencode/qwen3.7-max | ✅ |
+| Leader | Orquestador | opencode/qwen3.7-plus | ✅ |
 | Explorer | Investigación | opencode/mimo-v2.5-pro | ✅ |
 | Implementer | Constructor | opencode/qwen3.7-plus | ✅ |
 | Reviewer | Auditor | opencode/deepseek-v4-flash | ✅ |

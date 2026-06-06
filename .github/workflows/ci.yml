@@ -7,7 +7,7 @@ on:
     branches: [pre, int, pro]
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: false
 
 jobs:
   lint-and-test:
@@ -20,7 +20,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: "22"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
@@ -74,7 +74,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: "22"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
@@ -98,14 +98,22 @@ jobs:
 
       - name: Build production bundle
         run: |
-          mkdir -p dist
-          cp -r src lambda.js pnpm-lock.yaml dist/
-          # Strip devEngines (blocks npm; pnpm restriction not needed at runtime)
-          jq 'del(.devEngines)' package.json > dist/package.json
+          # pnpm deploy crea un directorio con estructura plana (hoisted) 
+          # y solo dependencias de producción, ideal para Lambda
+          pnpm deploy --prod --ignore-scripts dist/
+          
+          # Copia los archivos de código fuente que pnpm deploy no incluye
+          cp -r src dist/
+          cp lambda.js dist/
+          
+          # Limpia el package.json en dist si es necesario
           cd dist
-          pnpm install --prod --ignore-scripts
+          jq 'del(.devEngines)' package.json > package.tmp.json && mv package.tmp.json package.json
+          
           echo "Bundle size: $(du -sh . | cut -f1)"
           ls -la
+          echo "node_modules structure:"
+          ls -la node_modules/ | head -20
 
       - name: CDK Bootstrap (if needed)
         run: |

@@ -1,6 +1,6 @@
 ---
 description: Orquestador. Recibe la tarea principal, divide el trabajo y lanza subagentes. NUNCA escribe código directamente.
-model: opencode-go/qwen3.7-max
+model: opencode-go/qwen3.7-plus
 temperature: 0.2
 permission:
     edit:
