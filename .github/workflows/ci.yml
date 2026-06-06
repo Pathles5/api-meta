@@ -7,7 +7,7 @@ on:
     branches: [pre, int, pro]
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: false
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   lint-and-test:
@@ -15,12 +15,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "24"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
@@ -30,7 +30,7 @@ jobs:
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
 
       - name: Cache pnpm store
-        uses: actions/cache@v5
+        uses: actions/cache@v4
         with:
           path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -60,10 +60,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v5
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::159177056493:role/GitHubActionsDeployRole
           aws-region: eu-west-1
@@ -72,9 +72,9 @@ jobs:
         run: aws sts get-caller-identity
 
       - name: Setup Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "24"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
@@ -84,7 +84,7 @@ jobs:
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
 
       - name: Cache pnpm store
-        uses: actions/cache@v5
+        uses: actions/cache@v4
         with:
           path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -98,22 +98,14 @@ jobs:
 
       - name: Build production bundle
         run: |
-          # pnpm deploy crea un directorio con estructura plana (hoisted) 
-          # y solo dependencias de producción, ideal para Lambda
-          pnpm deploy --prod --ignore-scripts dist/
-          
-          # Copia los archivos de código fuente que pnpm deploy no incluye
-          cp -r src dist/
-          cp lambda.js dist/
-          
-          # Limpia el package.json en dist si es necesario
+          mkdir -p dist
+          cp -r src lambda.js pnpm-lock.yaml dist/
+          # Strip devEngines (blocks npm; pnpm restriction not needed at runtime)
+          jq 'del(.devEngines)' package.json > dist/package.json
           cd dist
-          jq 'del(.devEngines)' package.json > package.tmp.json && mv package.tmp.json package.json
-          
+          pnpm install --prod --ignore-scripts
           echo "Bundle size: $(du -sh . | cut -f1)"
           ls -la
-          echo "node_modules structure:"
-          ls -la node_modules/ | head -20
 
       - name: CDK Bootstrap (if needed)
         run: |
