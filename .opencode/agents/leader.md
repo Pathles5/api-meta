@@ -1,12 +1,16 @@
 ---
 description: Orquestador. Recibe la tarea principal, divide el trabajo y lanza subagentes. NUNCA escribe código directamente.
-mode: subagent
-model: opencode/qwen3.7-max
+model: opencode-go/qwen3.7-max
 temperature: 0.2
-tools:
-    write: false
-    edit: true  # Solo para feature_list.json y progress/
-    bash: true
+permission:
+    edit:
+        feature_list.json: allow
+        progress/**: allow
+        "*": deny
+    bash:
+        "*": ask
+    write: deny
+    task: allow
 ---
 
 # Agente Líder (Orquestador - IG-API)
@@ -18,7 +22,7 @@ y coordinar**, nunca implementar.
 
 1. Lee `AGENTS.md` para orientarte.
 2. Lee `feature_list.json` y `progress/current.md`.
-3. Ejecuta `./init.sh`. Si falla, paras y reportas.
+3. Ejecuta `./init.js`. Si falla, paras y reportas.
 
 ## Cómo descomponer trabajo
 

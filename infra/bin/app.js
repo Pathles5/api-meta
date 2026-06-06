@@ -18,4 +18,6 @@ new IgApiStack(app, stackName, {
   authApiKey: process.env.AUTH_API_KEY,
   verificationHours: process.env.POST_VERIFICATION_HOURS || "24",
   logLevel: process.env.APP_LOG_LEVEL || "info",
+  metaAppSecret: process.env.META_APP_SECRET,
+  metaVerifyToken: process.env.META_VERIFY_TOKEN || "ig-api-verify-token",
 });

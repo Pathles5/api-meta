@@ -1,35 +1,42 @@
 # Tarea en Curso
 
-## 🚨 Bloqueo Crítico: Lambda Deployment
+## Phase 7: Webhooks (FEAT-008 a FEAT-011)
 
-**Feature ID**: FEAT-007 (Infrastructure & Deployment)
-**Agente Responsable**: DevOps Agent
-**Estado**: BLOCKED - Lambda package > 250MB
-**Fecha de última actualización**: 2026-06-06
+**Features**: FEAT-008, FEAT-009, FEAT-010, FEAT-011
+**Estado**: REVIEW
+**Fecha de ultima actualizacion**: 2026-06-06
 
-### Problema
-`Code.fromAsset` en `infra/lib/ig-api-stack.js:31` empaqueta todo `node_modules` (~300MB+). Lambda rechaza paquetes > 250MB.
+### Implementacion completada
 
-### Plan de Solución (Aprobado)
-**Cambio 1**: Build step en CI (`.github/workflows/ci.yml`)
-- Agregar paso antes de `cdk deploy` que cree `dist/` con solo dependencias de producción
-- Usar `npm install --omit=dev --ignore-scripts`
+#### Archivos CREADOS
+- `src/middleware/verifyMetaSignature.js` - HMAC-SHA256 con crypto.timingSafeEqual, factory function con appSecret opcional
+- `src/routes/webhooks.js` - GET (challenge-response) + POST (eventos), factory function con processor inyectable
+- `src/services/webhookProcessor.js` - Procesa eventos Meta (instagram/page), retorna { processed, errors }
+- `tests/verifyMetaSignature.test.js` - 7 tests unitarios (firma valida, missing, invalida, formato, 500, env, timing-safe)
+- `tests/webhookProcessor.test.js` - 7 tests unitarios (instagram, no-instagram, multiples, sin changes, vacio, page)
+- `tests/webhooks.test.js` - 8 tests integracion (GET challenge 200/403, POST 200/401/malformed/missing-sig)
 
-**Cambio 2**: CDK apunta a `dist/` (`infra/lib/ig-api-stack.js:31`)
-- Cambiar `Code.fromAsset(resolve(..., "../../"))` a `Code.fromAsset(resolve(..., "../../dist"))`
+#### Archivos MODIFICADOS
+- `src/app.js` - Monta /webhooks con express.raw() ANTES de express.json() y authenticate
+- `infra/lib/ig-api-stack.js` - Agrega metaAppSecret/metaVerifyToken a props, env vars, y recurso /webhooks (GET+POST)
+- `infra/bin/app.js` - Pasa metaAppSecret y metaVerifyToken al stack
+- `.env.example` - Documenta META_APP_SECRET y META_VERIFY_TOKEN
+- `.github/workflows/ci.yml` - Agrega META_APP_SECRET y META_VERIFY_TOKEN al CDK Deploy env
 
-### Resultado Esperado
-- Tamaño: ~300MB+ → ~5-10MB
-- Solo dependencias de producción (express, dotenv, pino, @aws-sdk)
-- `@aws-sdk/*` se excluye porque ya viene en el runtime de Lambda
+#### Decisiones de diseno
+- verifyMetaSignature se aplica SOLO a POST /webhooks (GET no tiene body ni firma)
+- El middleware vive dentro del router (no en app.js) para aplicar solo a POST
+- Webhooks siempre responden 200 a Meta (incluso con JSON malformado) para evitar reintentos
+- Raw body via express.raw() en app.js, parseo manual en el router
 
-### Próximos Pasos Inmediatos
-1. Implementar build step en `ci.yml`
-2. Actualizar `ig-api-stack.js` para apuntar a `dist/`
-3. Probar deploy local con `cdk synth`
-4. Push a main y verificar deploy en GitHub Actions
+### Verificacion
+- [x] pnpm lint - 0 errores
+- [x] pnpm test - 93 tests pasan (71 existentes + 22 nuevos)
+- [x] Sin nuevas dependencias (solo node:crypto)
+- [x] Tests en tests/ (regla estricta)
+- [x] JSDoc en funciones publicas
+- [x] Factory functions con dependencias inyectables
 
-### Otros Pendientes de Sesión Anterior
-- [ ] Verificar token Meta `EAAL4y0p...` — ¿Se usó en producción? Rotar si sí.
-- [ ] Phase 7: Webhooks — `POST /webhooks`, validación firma Meta, challenge-response
-- [ ] Phase 8: Production Readiness — OpenAPI/Swagger, CloudWatch dashboard
+### Pendiente
+- [ ] Reviewer approval
+- [ ] Marcar features como completed en feature_list.json

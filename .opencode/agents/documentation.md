@@ -3,10 +3,11 @@ description: Maintains project documentation, decision records, and roadmap sync
 mode: subagent
 model: opencode/mimo-v2.5-free
 temperature: 0.1
-tools:
-    write: true
-    edit: true
-    bash: false
+permission:
+    edit: allow
+    bash: deny
+    write: allow
+    task: deny
 ---
 
 # Agente de Documentación (IG-API)

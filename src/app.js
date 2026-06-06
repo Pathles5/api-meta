@@ -1,6 +1,7 @@
 import express from "express";
 import { healthRouter } from "./routes/health.js";
 import { postsRouter } from "./routes/posts.js";
+import { webhooksRouter } from "./routes/webhooks.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { cors } from "./middleware/cors.js";
 import { rateLimit } from "./middleware/rateLimit.js";
@@ -16,8 +17,13 @@ app.use(
     max: parseInt(process.env.APP_RATE_LIMIT_MAX) || 100,
   }),
 );
-app.use(express.json({ limit: "1mb" }));
 app.use(requestLogger);
+
+// Webhooks: raw body (before json parsing and authenticate)
+app.use("/webhooks", express.raw({ type: "application/json" }), webhooksRouter);
+
+// JSON parsing for the rest of the routes
+app.use(express.json({ limit: "1mb" }));
 
 app.use(healthRouter);
 app.use("/posts", authenticate, postsRouter);

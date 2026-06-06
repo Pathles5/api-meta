@@ -1,12 +1,13 @@
 ---
 description: Designs and manages AWS CDK infrastructure, GitHub Actions CI/CD, and deployment safety
 mode: subagent
-model: opencode/deepseek-v4-pro
+model: opencode-go/deepseek-v4-pro
 temperature: 0.1
-tools:
-    write: true
-    edit: true
-    bash: true
+permission:
+    edit: allow
+    bash: allow
+    write: allow
+    task: deny
 ---
 
 You are a Senior DevOps and Cloud Engineer.
