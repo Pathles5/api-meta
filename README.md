@@ -71,7 +71,7 @@ El proyecto utiliza **16 variables de entorno** organizadas por categoría. **4 
 | `META_VERIFY_TOKEN` | META | ❌ No | Token de verificación de webhooks (lo defines tú) | — | `my_verify_token` |
 | `AUTH_API_KEY` | AUTH | ✅ **Sí** | API key para autenticación de clientes (`X-API-Key` header) | — | `sk-test-abc123...` |
 | `APP_PORT` | APP | ❌ No | Puerto del servidor | `3000` | `3000` |
-| `NODE_ENV` | APP | ❌ No | Entorno de ejecución | `development` | `production` |
+| `NODE_ENV` | APP | ❌ No | Modo de ejecución de Node.js. En Lambda siempre es "production" por seguridad y rendimiento. NO confundir con IG_ENV. | `production` | `development` (local), `production` (CDK) |
 | `APP_RATE_LIMIT_WINDOW_MS` | APP | ❌ No | Ventana de rate limit en milisegundos | `60000` | `60000` |
 | `APP_RATE_LIMIT_MAX` | APP | ❌ No | Máximo de requests por ventana | `100` | `100` |
 | `APP_LOG_LEVEL` | APP | ❌ No | Nivel de log | `info` | `debug` |
@@ -80,7 +80,32 @@ El proyecto utiliza **16 variables de entorno** organizadas por categoría. **4 
 | `DYNAMODB_TABLE_NAME` | DYNAMODB | ❌ No | Nombre de la tabla DynamoDB | `ig-posts` | `ig-posts-pre` |
 | `DYNAMODB_POST_TTL_DAYS` | DYNAMODB | ❌ No | TTL de posts en días | `90` | `90` |
 | `POST_VERIFICATION_HOURS` | POST | ❌ No | Horas antes de re-verificación de posts | `24` | `24` |
-| `IG_ENV` | ENTORNO | ❌ No | Entorno de despliegue | `pre` | `pro` |
+| `IG_ENV` | ENTORNO | ❌ No | Entorno de infraestructura. Controla nombres de recursos AWS (stack, tabla, API Gateway). Se obtiene automáticamente del nombre de la branch en CI/CD. NO confundir con NODE_ENV. | `pre` | `pro` |
+
+### ⚠️ Diferencia entre NODE_ENV e IG_ENV
+
+Es importante no confundir estas dos variables:
+
+| Variable | Propósito | Valores | Uso |
+|----------|-----------|---------|-----|
+| **NODE_ENV** | Modo de ejecución de Node.js | `development`, `production`, `test` | Controla comportamiento del runtime (ej: stack traces en errores) |
+| **IG_ENV** | Entorno de infraestructura | `dev`, `pre`, `int`, `pro` | Controla nombres de recursos AWS (stack, tabla, API Gateway) |
+
+**¿Por qué NODE_ENV=production en Lambda?**
+
+En AWS Lambda, `NODE_ENV` siempre se establece como `"production"` independientemente del entorno (pre/int/pro) porque:
+- Es el estándar de la industria para servidores
+- Mejora el rendimiento (Node.js optimiza para production)
+- Es más seguro (no expone stack traces en errores)
+
+**¿Cómo se identifica el entorno entonces?**
+
+Con `IG_ENV`, que se obtiene automáticamente del nombre de la branch en CI/CD:
+- Branch `pre` → `IG_ENV=pre` → Stack `ig-api-pre`, Tabla `ig-posts-pre`
+- Branch `int` → `IG_ENV=int` → Stack `ig-api-int`, Tabla `ig-posts-int`
+- Branch `pro` → `IG_ENV=pro` → Stack `ig-api-pro`, Tabla `ig-posts-pro`
+
+**Ejemplo análogo:** En un proyecto React, puedes tener múltiples entornos (staging, production) todos con `NODE_ENV=production`, pero cada uno con su propia configuración de infraestructura.
 
 ### Categorías de Variables
 
@@ -95,7 +120,7 @@ El proyecto utiliza **16 variables de entorno** organizadas por categoría. **4 
 
 #### ⚙️ APP (5 variables)
 - **`APP_PORT`**: Puerto del servidor (solo desarrollo local)
-- **`NODE_ENV`**: Entorno de ejecución (`development`, `production`)
+- **`NODE_ENV`**: Modo de ejecución de Node.js (`development`, `production`). En Lambda siempre es `production`. NO confundir con `IG_ENV`
 - **`APP_RATE_LIMIT_WINDOW_MS`**: Ventana de tiempo para rate limiting en milisegundos
 - **`APP_RATE_LIMIT_MAX`**: Máximo de requests permitidos por ventana
 - **`APP_LOG_LEVEL`**: Nivel de log (`fatal`, `error`, `warn`, `info`, `debug`, `trace`)
@@ -112,7 +137,7 @@ El proyecto utiliza **16 variables de entorno** organizadas por categoría. **4 
 - **`POST_VERIFICATION_HOURS`**: Horas que pasan antes de que un post sea re-verificado contra la API de Meta
 
 #### 🌍 ENTORNO (1 variable)
-- **`IG_ENV`**: Entorno de despliegue (`dev`, `pre`, `int`, `pro`). Se obtiene automáticamente del nombre de la branch
+- **`IG_ENV`**: Entorno de infraestructura (`dev`, `pre`, `int`, `pro`). Controla nombres de recursos AWS. Se obtiene automáticamente del nombre de la branch. NO confundir con `NODE_ENV`
 
 ### Ejemplo de archivo `.env` para desarrollo local
 
