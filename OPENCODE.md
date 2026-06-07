@@ -78,6 +78,8 @@ Para cada nueva feature o cambio significativo, sigue este orden estricto:
 - Crea/actualiza el Spec (`specs/[FEAT-ID]_spec.md`) si es un cambio mayor.
 - Actualiza `progress/current.md` con el estado de la tarea.
 - **NUNCA implementa directamente. Siempre delega al Implementer o DevOps.**
+- **NUNCA lee ni busca en archivos de código fuente. Para eso delega al Explorer.**
+- **NUNCA actualiza documentación de agentes ni harness. Para eso delega al Documentation.**
 
 ### 3. **Ejecutar (Implementer Agent)** 🛠️
 - Recibe el plan aprobado y el Context Brief.
