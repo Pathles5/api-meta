@@ -180,20 +180,6 @@
                          "completed_date":  "2026-06-07"
                      },
                      {
-                         "id":  "FEAT-015",
-                         "title":  "Load \u0026 Stress Testing",
-                         "description":  "Performance testing, identify bottlenecks",
-                         "status":  "deferred",
-                         "phase":  8,
-                         "assigned_agent":  "none",
-                         "dependencies":  [
-                                              "FEAT-011"
-                                          ],
-                         "priority":  "low",
-                         "estimated_effort":  "large",
-                         "deferred_reason":  "Load \u0026 Stress Testing deferred until app is closer to release to avoid unnecessary costs. Will be implemented when there is real traffic to test against."
-                     },
-                     {
                          "id":  "FEAT-016",
                          "title":  "Test Coverage Configuration",
                          "description":  "Configure test coverage thresholds and reporting",
@@ -205,19 +191,6 @@
                                           ],
                          "priority":  "medium",
                          "estimated_effort":  "small"
-                     },
-                     {
-                         "id":  "FEAT-017",
-                         "title":  "Image Storage Strategy",
-                         "description":  "Decide between S3 vs DynamoDB for image storage",
-                         "status":  "pending",
-                         "phase":  8,
-                         "assigned_agent":  "none",
-                         "dependencies":  [
-                                              "FEAT-011"
-                                          ],
-                         "priority":  "medium",
-                         "estimated_effort":  "medium"
                      },
                      {
                          "id":  "FEAT-019",
@@ -399,8 +372,37 @@
                                 }
                       },
     "next_actions":  [
-                         "FEAT-012: CloudWatch Monitoring \u0026 Alerts (Phase 8)",
-                         "FEAT-013: API Documentation (Phase 8)",
-                         "FEAT-014: Cost Review \u0026 Optimization (Phase 8)"
-                     ]
+                         "FEAT-022: Define DynamoDB Data Model (Phase 9)",
+                         "FEAT-019: META Token Management from AWS Systems Manager (Phase 9)",
+                         "FEAT-020: Evaluate META Token Strategy (Phase 9)"
+                     ],
+    "backlog":  [
+                    {
+                        "id":  "FEAT-015",
+                        "title":  "Load \u0026 Stress Testing",
+                        "description":  "Performance testing, identify bottlenecks",
+                        "status":  "deferred",
+                        "phase":  8,
+                        "assigned_agent":  "none",
+                        "dependencies":  [
+                                             "FEAT-011"
+                                         ],
+                        "priority":  "low",
+                        "estimated_effort":  "large",
+                        "deferred_reason":  "Load \u0026 Stress Testing deferred until app is closer to release to avoid unnecessary costs. Will be implemented when there is real traffic to test against."
+                    },
+                    {
+                        "id":  "FEAT-017",
+                        "title":  "Image Storage Strategy",
+                        "description":  "Decide between S3 vs DynamoDB for image storage",
+                        "status":  "pending",
+                        "phase":  8,
+                        "assigned_agent":  "none",
+                        "dependencies":  [
+                                             "FEAT-011"
+                                         ],
+                        "priority":  "medium",
+                        "estimated_effort":  "medium"
+                    }
+                ]
 }
