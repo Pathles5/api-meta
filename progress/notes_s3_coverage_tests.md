@@ -72,10 +72,11 @@
 - ateLimit.js: 68.63% (falta tests de rate limiting activo)
 - posts.js: 76.58% (falta tests de POST /posts/verify)
 
-### Próximos pasos:
-- [ ] Implementar 7-8 tests faltantes para alcanzar 95% cobertura
-- [ ] Priorizar tests de ateLimit.js (mecanismo de seguridad)
-- [ ] Tests de POST /posts/verify (endpoint completo sin cobertura)
+### Decisión tomada:
+**NO implementar tests adicionales de rateLimit**. 
+- **Razón**: No es costo-efectivo (1.5-2 horas por beneficio marginal)
+- **Cobertura actual**: 94% es suficiente para el proyecto
+- **Umbral CI/CD**: 80% (ya superado con creces)
 
 ### Nota sobre tiempos en tests:
 **SÍ es buena práctica usar tiempos reducidos en tests**. Para ateLimit.js:
@@ -140,15 +141,14 @@ Al ser un **proyecto educativo**, probablemente **no necesitaremos** los entorno
 
 ### Prioridad alta:
 1. Completar integración con Meta App (cuando usuario termine configuración)
-2. Implementar tests faltantes para alcanzar 95% cobertura
 
 ### Prioridad media:
-3. Evaluar si necesitamos S3 (depende de caso de uso real)
-4. Probar webhooks en producción con datos reales
+2. Evaluar si necesitamos S3 (depende de caso de uso real)
+3. Probar webhooks en producción con datos reales
 
 ### Prioridad baja:
-5. Crear entornos int/pro (solo si hay necesidad concreta)
-6. Implementar CloudFront (solo si hay >50K vistas/mes)
+4. Crear entornos int/pro (solo si hay necesidad concreta)
+5. Implementar CloudFront (solo si hay >50K vistas/mes)
 
 ---
 
@@ -158,3 +158,4 @@ Al ser un **proyecto educativo**, probablemente **no necesitaremos** los entorno
 - Priorizar Free Tier siempre
 - Mantener la simplicidad sobre la optimización prematura
 - Proyecto educativo: priorizar aprendizaje sobre producción
+- Cobertura de tests: 94% es suficiente, no buscar 95%+ a menos que haya necesidad concreta
