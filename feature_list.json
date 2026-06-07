@@ -202,34 +202,21 @@
                          "priority":  "medium",
                          "estimated_effort":  "small"
                      },
-                     {
-                         "id":  "FEAT-017",
-                         "title":  "Image Storage Strategy",
-                         "description":  "Decide between S3 vs DynamoDB for image storage",
-                         "status":  "pending",
-                         "phase":  8,
-                         "assigned_agent":  "none",
-                         "dependencies":  [
-                                              "FEAT-011"
-                                          ],
-                         "priority":  "medium",
-                         "estimated_effort":  "medium"
-                     },
-                     {
-                         "id":  "FEAT-018",
-                         "estimated_effort":  "medium",
-                         "description":  "Webhooks only receive reactions/comments, not post creation events. Evaluate new flow: on event arrival, check if post exists in DynamoDB - if not exists, create it; if exists, do nothing.",
-                         "phase":  9,
-                         "dependencies":  [
-                                              "FEAT-011"
-                                          ],
-                         "status":  "pending",
-                         "title":  "Evaluate Webhook Flow Change",
-                         "priority":  "high",
-                         "assigned_agent":  "explorer"
-                     },
-                     {
-                         "id":  "FEAT-019",
+                      {
+                          "id":  "FEAT-017",
+                          "title":  "Image Storage Strategy",
+                          "description":  "Decide between S3 vs DynamoDB for image storage",
+                          "status":  "pending",
+                          "phase":  8,
+                          "assigned_agent":  "none",
+                          "dependencies":  [
+                                               "FEAT-011"
+                                           ],
+                          "priority":  "medium",
+                          "estimated_effort":  "medium"
+                      },
+                      {
+                          "id":  "FEAT-019",
                          "estimated_effort":  "medium",
                          "description":  "Store and retrieve META_ACCESS_TOKEN from AWS Systems Manager Parameter Store instead of environment variables for better security.",
                          "phase":  9,
@@ -324,162 +311,43 @@
                          "estimated_effort":  "medium",
                          "description":  "When receiving a new post event, send the post text to Grok AI to extract the price. Store extracted price in DynamoDB.",
                          "phase":  9,
-                         "dependencies":  [
-                                              "FEAT-018",
-                                              "FEAT-025"
-                                          ],
+                          "dependencies":  [
+                                               "FEAT-028",
+                                               "FEAT-025"
+                                           ],
                          "status":  "pending",
                          "title":  "Extract Price from Posts with Grok",
                          "priority":  "high",
                          "assigned_agent":  "none"
                      },
-                     {
-                         "id":  "FEAT-027",
-                         "estimated_effort":  "large",
-                         "description":  "Implement S3 storage for Instagram multimedia content (images/videos). Download media from Instagram URLs and store in S3 with proper organization.",
-                         "phase":  9,
-                         "dependencies":  [
-                                              "FEAT-017",
-                                              "FEAT-022"
-                                          ],
-                         "status":  "pending",
-                         "title":  "Implement S3 Multimedia Storage",
-                         "priority":  "medium",
-                         "assigned_agent":  "none"
-                     },
-                     {
-                         "id":  "FEAT-018",
-                         "estimated_effort":  "medium",
-                         "description":  "Webhooks only receive reactions/comments, not post creation events. Evaluate new flow: on event arrival, check if post exists in DynamoDB - if not exists, create it; if exists, do nothing.",
-                         "phase":  9,
-                         "dependencies":  [
-                                              "FEAT-011"
-                                          ],
-                         "status":  "pending",
-                         "title":  "Evaluate Webhook Flow Change",
-                         "priority":  "high",
-                         "assigned_agent":  "explorer"
-                     },
-                     {
-                         "id":  "FEAT-019",
-                         "estimated_effort":  "medium",
-                         "description":  "Store and retrieve META_ACCESS_TOKEN from AWS Systems Manager Parameter Store instead of environment variables for better security.",
-                         "phase":  9,
-                         "dependencies":  [
-                                              "FEAT-007"
-                                          ],
-                         "status":  "pending",
-                         "title":  "META Token Management from AWS Systems Manager",
-                         "priority":  "high",
-                         "assigned_agent":  "none"
-                     },
-                     {
-                         "id":  "FEAT-020",
-                         "estimated_effort":  "small",
-                         "description":  "Evaluate whether to obtain META token directly or obtain token and make requests to extend it to 60 days. Analyze pros/cons of each approach.",
-                         "phase":  9,
-                         "dependencies":  [
-                                              "FEAT-019"
-                                          ],
-                         "status":  "pending",
-                         "title":  "Evaluate META Token Strategy",
-                         "priority":  "high",
-                         "assigned_agent":  "explorer"
-                     },
-                     {
-                         "id":  "FEAT-021",
-                         "estimated_effort":  "large",
-                         "description":  "Implement automatic rotation of META token when it expires: obtain new token and update in Systems Manager. Depends on FEAT-020 conclusion.",
-                         "phase":  9,
-                         "dependencies":  [
-                                              "FEAT-020"
-                                          ],
-                         "status":  "pending",
-                         "title":  "Automatic META Token Rotation",
-                         "priority":  "high",
-                         "assigned_agent":  "none"
-                     },
-                     {
-                         "id":  "FEAT-022",
-                         "estimated_effort":  "medium",
-                         "description":  "Define the DynamoDB data model/schema for storing Instagram posts and related data. Define fields, data types, indexes, and access patterns even if not immediately needed.",
-                         "phase":  9,
-                         "dependencies":  [
-                                              "FEAT-005"
-                                          ],
-                         "status":  "pending",
-                         "title":  "Define DynamoDB Data Model",
-                         "priority":  "high",
-                         "assigned_agent":  "none"
-                     },
-                     {
-                         "id":  "FEAT-023",
-                         "estimated_effort":  "small",
-                         "description":  "Implement GET /posts/:id endpoint to retrieve a single post from DynamoDB by its ID.",
-                         "phase":  9,
-                         "dependencies":  [
-                                              "FEAT-022"
-                                          ],
-                         "status":  "pending",
-                         "title":  "API Endpoint: Get Post by ID",
-                         "priority":  "high",
-                         "assigned_agent":  "none"
-                     },
-                     {
-                         "id":  "FEAT-024",
-                         "estimated_effort":  "small",
-                         "description":  "Implement GET /posts?limit=N endpoint to retrieve N posts from DynamoDB with pagination support.",
-                         "phase":  9,
-                         "dependencies":  [
-                                              "FEAT-022"
-                                          ],
-                         "status":  "pending",
-                         "title":  "API Endpoint: Get N Posts",
-                         "priority":  "high",
-                         "assigned_agent":  "none"
-                     },
-                     {
-                         "id":  "FEAT-025",
-                         "estimated_effort":  "medium",
-                         "description":  "Prepare integration with Grok AI service. Implement service to send text and extract structured information from it.",
-                         "phase":  9,
-                         "dependencies":  [
-
-                                          ],
-                         "status":  "pending",
-                         "title":  "Grok AI Integration",
-                         "priority":  "medium",
-                         "assigned_agent":  "none"
-                     },
-                     {
-                         "id":  "FEAT-026",
-                         "estimated_effort":  "medium",
-                         "description":  "When receiving a new post event, send the post text to Grok AI to extract the price. Store extracted price in DynamoDB.",
-                         "phase":  9,
-                         "dependencies":  [
-                                              "FEAT-018",
-                                              "FEAT-025"
-                                          ],
-                         "status":  "pending",
-                         "title":  "Extract Price from Posts with Grok",
-                         "priority":  "high",
-                         "assigned_agent":  "none"
-                     },
-                     {
-                         "id":  "FEAT-027",
-                         "estimated_effort":  "large",
-                         "description":  "Implement S3 storage for Instagram multimedia content (images/videos). Download media from Instagram URLs and store in S3 with proper organization.",
-                         "phase":  9,
-                         "dependencies":  [
-                                              "FEAT-017",
-                                              "FEAT-022"
-                                          ],
-                         "status":  "pending",
-                         "title":  "Implement S3 Multimedia Storage",
-                         "priority":  "medium",
-                         "assigned_agent":  "none"
-                     }
-                 ],
+                      {
+                          "id":  "FEAT-027",
+                          "estimated_effort":  "large",
+                          "description":  "Implement S3 storage for Instagram multimedia content (images/videos). Download media from Instagram URLs and store in S3 with proper organization.",
+                          "phase":  9,
+                          "dependencies":  [
+                                               "FEAT-017",
+                                               "FEAT-022"
+                                           ],
+                          "status":  "pending",
+                          "title":  "Implement S3 Multimedia Storage",
+                          "priority":  "medium",
+                          "assigned_agent":  "none"
+                      },
+                      {
+                          "id":  "FEAT-028",
+                          "estimated_effort":  "medium",
+                          "description":  "Webhooks only receive reactions/comments, not post creation events. Evaluate new flow: on event arrival, check if post exists in DynamoDB - if not exists, create it; if exists, do nothing.",
+                          "phase":  9,
+                          "dependencies":  [
+                                               "FEAT-011"
+                                           ],
+                          "status":  "pending",
+                          "title":  "Evaluate Webhook Flow Change",
+                          "priority":  "high",
+                          "assigned_agent":  "explorer"
+                      }
+                  ],
     "valid_statuses":  [
                            "pending",
                            "in_progress",
@@ -527,8 +395,8 @@
                                 }
                       },
     "next_actions":  [
-                         "FEAT-018: Evaluate Webhook Flow Change",
-                         "FEAT-019: META Token Management from AWS Systems Manager",
-                         "FEAT-022: Define DynamoDB Data Model"
+                         "FEAT-012: CloudWatch Monitoring & Alerts (Phase 8)",
+                         "FEAT-013: API Documentation (Phase 8)",
+                         "FEAT-014: Cost Review & Optimization (Phase 8)"
                      ]
 }
