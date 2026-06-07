@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Política de Privacidad - IG-API</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --bg: #ffffff;
+            --bg-alt: #f9fafb;
+            --border: #e5e7eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background-color: var(--bg);
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        main {
+            padding: 40px 0;
+        }
+        
+        section {
+            margin-bottom: 50px;
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        h2 {
+            color: var(--primary);
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border);
+        }
+        
+        h3 {
+            color: var(--text);
+            font-size: 1.3rem;
+            margin: 25px 0 15px 0;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            color: var(--text);
+        }
+        
+        ul, ol {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+        
+        strong {
+            color: var(--text);
+        }
+        
+        .highlight {
+            background-color: var(--bg-alt);
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .contact-info {
+            background-color: var(--bg-alt);
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+        
+        .contact-info p {
+            margin-bottom: 10px;
+        }
+        
+        footer {
+            background-color: var(--bg-alt);
+            padding: 30px 0;
+            text-align: center;
+            border-top: 1px solid var(--border);
+            color: var(--text-light);
+        }
+        
+        footer p {
+            margin: 0;
+            color: var(--text-light);
+        }
+        
+        a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2rem;
+            }
+            
+            header p {
+                font-size: 1rem;
+            }
+            
+            section {
+                padding: 20px;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            h3 {
+                font-size: 1.2rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            header {
+                padding: 30px 0;
+            }
+            
+            header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .container {
+                padding: 0 15px;
+            }
+            
+            section {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>IG-API</h1>
+            <p>Instagram Graph API Integration</p>
+        </div>
+    </header>
+    
+    <main>
+        <div class="container">
+            <section id="privacy-policy">
+                <h2>Política de Privacidad</h2>
+                
+                <p><strong>Última actualización:</strong> 7 de junio de 2026</p>
+                
+                <h3>1. Introducción</h3>
+                <p>Esta Política de Privacidad describe cómo IG-API ("nosotros", "nuestro") recopila, usa y protege la información cuando utiliza nuestro servicio de integración con la API de Instagram Graph de Meta.</p>
+                
+                <h3>2. Datos que Recopilamos</h3>
+                <p>Recopilamos únicamente los datos necesarios para el funcionamiento del servicio:</p>
+                <ul>
+                    <li><strong>Datos de Instagram:</strong> Publicaciones (posts), comentarios, menciones y metadatos asociados (fechas, likes, conteo de comentarios)</li>
+                    <li><strong>Datos de uso:</strong> Información sobre cómo se utiliza la API (endpoints consultados, horarios de acceso)</li>
+                    <li><strong>Datos de autenticación:</strong> Tokens de acceso de Meta API y claves de API para autenticación</li>
+                </ul>
+                
+                <h3>3. Cómo Usamos los Datos</h3>
+                <p>Utilizamos los datos recopilados para:</p>
+                <ul>
+                    <li><strong>Almacenamiento:</strong> Guardar publicaciones de Instagram en DynamoDB para acceso rápido</li>
+                    <li><strong>Análisis:</strong> Proporcionar estadísticas básicas sobre publicaciones (likes, comentarios)</li>
+                    <li><strong>Sincronización:</strong> Mantener los datos actualizados con la API de Instagram</li>
+                    <li><strong>Verificación:</strong> Validar que las publicaciones sigan existiendo en Instagram</li>
+                </ul>
+                
+                <h3>4. Protección de Datos</h3>
+                <div class="highlight">
+                    <p><strong>Medidas de seguridad implementadas:</strong></p>
+                    <ul>
+                        <li><strong>Cifrado en tránsito:</strong> Todas las comunicaciones se realizan mediante HTTPS/TLS</li>
+                        <li><strong>Cifrado en reposo:</strong> Los datos en DynamoDB se cifran automáticamente con claves de AWS</li>
+                        <li><strong>Autenticación:</strong> API keys para controlar acceso a los endpoints</li>
+                        <li><strong>Rate limiting:</strong> Protección contra abuso y sobrecarga</li>
+                        <li><strong>Aislamiento:</strong> Cada entorno (pre, int, pro) tiene sus propios recursos aislados</li>
+                    </ul>
+                </div>
+                
+                <h3>5. Retención de Datos</h3>
+                <p>Los datos se almacenan temporalmente:</p>
+                <ul>
+                    <li><strong>TTL (Time-To-Live):</strong> 90 días por defecto</li>
+                    <li><strong>Eliminación automática:</strong> Los datos se eliminan automáticamente después del período de retención</li>
+                    <li><strong>Eliminación bajo demanda:</strong> Puede solicitar la eliminación de sus datos en cualquier momento</li>
+                </ul>
+                
+                <h3>6. Derechos del Usuario</h3>
+                <p>Usted tiene derecho a:</p>
+                <ul>
+                    <li><strong>Acceso:</strong> Solicitar una copia de todos los datos que tenemos sobre usted</li>
+                    <li><strong>Rectificación:</strong> Solicitar corrección de datos inexactos</li>
+                    <li><strong>Eliminación:</strong> Solicitar la eliminación de todos sus datos</li>
+                    <li><strong>Portabilidad:</strong> Recibir sus datos en un formato estructurado</li>
+                    <li><strong>Oposición:</strong> Oponerse al procesamiento de sus datos</li>
+                </ul>
+                
+                <h3>7. Compartición de Datos</h3>
+                <p>No compartimos sus datos con terceros, excepto:</p>
+                <ul>
+                    <li><strong>Meta (Facebook):</strong> Únicamente para obtener datos de Instagram mediante la API oficial</li>
+                    <li><strong>AWS:</strong> Como proveedor de infraestructura (DynamoDB, Lambda, API Gateway)</li>
+                    <li><strong>Requisitos legales:</strong> Cuando sea requerido por ley</li>
+                </ul>
+                
+                <h3>8. Cambios en esta Política</h3>
+                <p>Podemos actualizar esta política periodicamente. Los cambios significativos se notificarán mediante actualización de la fecha de "Última actualización" en la parte superior de esta página.</p>
+            </section>
+            
+            <section id="terms-of-service">
+                <h2>Términos de Servicio</h2>
+                
+                <p><strong>Última actualización:</strong> 7 de junio de 2026</p>
+                
+                <h3>1. Aceptación de Términos</h3>
+                <p>Al utilizar IG-API, usted acepta estos Términos de Servicio. Si no está de acuerdo, no utilice el servicio.</p>
+                
+                <h3>2. Uso Aceptable</h3>
+                <p>Usted acepta:</p>
+                <ul>
+                    <li><strong>Uso legítimo:</strong> Utilizar el servicio solo para fines legales y legítimos</li>
+                    <li><strong>Cumplimiento:</strong> Cumplir con los términos de servicio de Meta/Instagram</li>
+                    <li><strong>No abuso:</strong> No intentar evadir rate limits o seguridad</li>
+                    <li><strong>No redistribución:</strong> No revender o redistribuir los datos obtenidos sin autorización</li>
+                </ul>
+                
+                <h3>3. Limitaciones de Responsabilidad</h3>
+                <div class="highlight">
+                    <p><strong>El servicio se proporciona "tal cual" sin garantías:</strong></p>
+                    <ul>
+                        <li>No garantizamos disponibilidad continua del 100%</li>
+                        <li>No somos responsables de cambios en la API de Instagram/Meta</li>
+                        <li>No garantizamos la precisión de los datos obtenidos de Instagram</li>
+                        <li>No somos responsables de daños indirectos o consecuentes</li>
+                    </ul>
+                </div>
+                
+                <h3>4. Propiedad Intelectual</h3>
+                <p><strong>IG-API:</strong> El código fuente está disponible bajo licencia ISC. Usted puede usarlo, modificarlo y distribuirlo según los términos de la licencia.</p>
+                <p><strong>Datos de Instagram:</strong> Todos los datos de Instagram permanecen propiedad de sus respectivos titulares y están sujetos a los términos de Instagram.</p>
+                
+                <h3>5. Disponibilidad del Servicio</h3>
+                <p>Nos esforzamos por mantener el servicio disponible, pero:</p>
+                <ul>
+                    <li>Pueden ocurrir interrupciones por mantenimiento o problemas técnicos</li>
+                    <li>El servicio depende de la API de Instagram, que puede cambiar o discontinuarse</li>
+                    <li>Los entornos de preproducción (pre, int) pueden tener inestabilidad intencional</li>
+                </ul>
+                
+                <h3>6. Modificaciones</h3>
+                <p> Nos reservamos el derecho de modificar estos términos en cualquier momento. Las modificaciones entrarán en vigor al publicarse en esta página.</p>
+                
+                <h3>7. Terminación</h3>
+                <p>Podemos suspender o terminar su acceso al servicio si viola estos términos o si el servicio debe ser discontinuado por razones técnicas o legales.</p>
+            </section>
+            
+            <section id="contact">
+                <h2>Contacto</h2>
+                
+                <p>Si tiene preguntas sobre esta Política de Privacidad o los Términos de Servicio, puede contactarnos:</p>
+                
+                <div class="contact-info">
+                    <p><strong>Email:</strong> <a href="mailto:pathles5@example.com">pathles5@example.com</a></p>
+                    <p><strong>GitHub:</strong> <a href="https://github.com/Pathles5/api-meta" target="_blank" rel="noopener noreferrer">https://github.com/Pathles5/api-meta</a></p>
+                    <p><strong>Repositorio:</strong> <a href="https://github.com/Pathles5/api-meta/issues" target="_blank" rel="noopener noreferrer">Abrir issue en GitHub</a></p>
+                </div>
+                
+                <p style="margin-top: 20px;">Para solicitudes de acceso, rectificación o eliminación de datos, por favor incluya:</p>
+                <ul>
+                    <li>Su nombre completo o identificador de usuario</li>
+                    <li>Descripción clara de su solicitud</li>
+                    <li>Información de contacto para respuesta</li>
+                </ul>
+            </section>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>© 2026 IG-API - Instagram Graph API Integration</p>
+            <p>Política de Privacidad y Términos de Servicio</p>
+        </div>
+    </footer>
+</body>
+</html>

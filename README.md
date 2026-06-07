@@ -659,6 +659,21 @@ git push origin pro  # → deploy con approval manual
 | **Approval** | N/A | No | No | ✅ Sí |
 | **Uso** | Desarrollo | Testing | Integración | Producción |
 
+## Legal
+
+El proyecto incluye documentación legal necesaria para el App Review de Meta y el uso responsable de la API:
+
+- **[Política de Privacidad y Términos de Servicio](docs/privacy-policy.html)** - Documento legal completo que incluye:
+  - Política de Privacidad (datos recopilados, uso, protección, retención, derechos del usuario)
+  - Términos de Servicio (uso aceptable, limitaciones, propiedad intelectual)
+  - Información de contacto
+
+**Acceso:** La documentación legal está alojada en GitHub Pages con HTTPS automático:
+- URL: `https://pathles5.github.io/api-meta/docs/privacy-policy.html`
+- URL alternativa: `https://pathles5.github.io/api-meta/docs/` (índice)
+
+**Propósito:** Este documento es requerido para el App Review de Meta cuando se solicitan permisos de Instagram Graph API.
+
 ## Documentation
 
 - [Project Context](PROJECT_CONTEXT.md)
