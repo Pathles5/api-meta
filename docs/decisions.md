@@ -31,7 +31,7 @@
 
 ### Decision: Module System
 
-**Context**: Node.js 24 supports ESM natively.
+**Context**: Node.js 22 supports ESM natively.
 
 **Decision**: ES Modules (`"type": "module"` in package.json)
 
@@ -487,7 +487,7 @@ const post = await repo.getPost(id);
 **Decision**: `createPostsRouter(repo)` factory accepts repository parameter.
 
 **Rationale**:
-- Avoids `mock.module()` which isn't stable in Node.js 24
+- Avoids `mock.module()` which isn't stable in Node.js 22
 - Tests inject mock repository directly
 - Production uses default repository (DynamoDB-backed)
 - Clean, idiomatic approach without experimental features

@@ -50,6 +50,8 @@ El proyecto usa múltiples entornos con stacks CDK independientes:
 
 **🚨 REGLA DIAMANTE: NUNCA actualiza documentación de agentes ni harness (AGENTS.md, OPENCODE.md, .opencode/). Para eso delega al Documentation Agent.**
 
+**🚨 REGLA TITANIO: SIEMPRE espera confirmación explícita del usuario antes de delegar a cualquier subagente o ejecutar cualquier acción que modifique el proyecto. Esto incluye: crear tareas, lanzar explorers, delegar al implementer, delegar al devops, actualizar feature_list.json, hacer commits, hacer push, etc.**
+
 - **Gestión de Estado**: Es el único responsable de actualizar `feature_list.json` y los archivos en `/progress/` (`current.md`, `history.md`). **NO puede editar código fuente, tests, infraestructura ni CI/CD.**
 - **Gatekeeper de Arquitectura y Costos**: Antes de aprobar cualquier cambio que implique nuevos servicios de AWS, dependencias, IaC o seguridad, *DEBE exigir y documentar*: Razón, costo estimado (priorizando AWS Free Tier), alternativas rechazadas e impacto operacional.
 - **Protocolo de Delegación**:
@@ -82,7 +84,7 @@ El proyecto usa múltiples entornos con stacks CDK independientes:
 ### 🛠️ 3. Implementer Agent (Constructor)
 **Responsabilidad principal**: Escribir código de producción siguiendo estrictamente las especificaciones aprobadas y el Context Brief.
 - **Filosofía**: Código simple, legible y mantenible. Funciones pequeñas con JSDoc útil.
-- **Stack**: Node.js 24, **PNPM** (nunca NPM/YARN), rutas relativas.
+- **Stack**: Node.js 22, **PNPM** (nunca NPM/YARN), rutas relativas.
 - **Regla de Oro**: Modifica los archivos reales directamente. No realices refactoring no solicitado. Si necesitas una dependencia, justifica por qué Node.js nativo no es suficiente.
 
 ### 🔎 4. Reviewer Agent (Auditor de Calidad y Seguridad)

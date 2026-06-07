@@ -32,7 +32,7 @@ Al iniciar cualquier conversación o tarea nueva, DEBES leer y procesar el sigui
 ---
 
 ## ☁️ Contexto Específico del Proyecto (IG-API)
-- **Stack**: Node.js 24, JavaScript (con JSDoc estricto) o TypeScript (solo si se justifica para CDK).
+- **Stack**: Node.js 22, JavaScript (con JSDoc estricto) o TypeScript (solo si se justifica para CDK).
 - **Infraestructura**: AWS CDK. Región: `eu-west-1`. Naming: `IG-API` o `IG_API`.
 - **CI/CD**: GitHub Actions con OIDC (sin claves estáticas).
 - **Filosofía de Infraestructura**: 
@@ -75,6 +75,7 @@ Para cada nueva feature o cambio significativo, sigue este orden estricto:
 - Revisa el Context Brief del Explorer.
 - Explica el plan al usuario, detallando impacto en costos, arquitectura y alternativas rechazadas.
 - **🚨 ESPERA aprobación explícita del usuario antes de continuar.**
+- **🚨 SIEMPRE espera confirmación explícita del usuario antes de delegar a cualquier subagente o ejecutar acciones.**
 - Crea/actualiza el Spec (`specs/[FEAT-ID]_spec.md`) si es un cambio mayor.
 - Actualiza `progress/current.md` con el estado de la tarea.
 - **NUNCA implementa directamente. Siempre delega al Implementer o DevOps.**

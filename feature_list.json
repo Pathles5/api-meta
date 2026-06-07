@@ -112,6 +112,18 @@
       "estimated_effort": "large"
     },
     {
+      "id": "FEAT-0111",
+      "title": "Test aws-cdk-lib/aws-lambda vs aws-cdk-lib/aws-lambda-nodejs",
+      "description": "Check differences between the two libraries for Lambda function deployment and performance. Check our current implementation and see if switching to aws-lambda-nodejs offers any benefits in terms of development experience, build times, or runtime performance.",
+      "status": "completed",
+      "completed_date": "2026-06-07",
+      "phase": 8,
+      "assigned_agent": "none",
+      "dependencies": ["FEAT-011"],
+      "priority": "high",
+      "estimated_effort": "medium"
+    },
+    {
       "id": "FEAT-012",
       "title": "CloudWatch Monitoring & Alerts",
       "description": "Advanced monitoring, custom metrics, alerting",

@@ -7,7 +7,7 @@ on:
     branches: [pre, int, pro]
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE22: true
 
 jobs:
   lint-and-test:
@@ -20,7 +20,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: "22"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
@@ -74,7 +74,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: "22"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
@@ -95,17 +95,6 @@ jobs:
 
       - name: Install AWS CDK CLI
         run: npm install -g aws-cdk
-
-      - name: Build production bundle
-        run: |
-          mkdir -p dist
-          cp -r src lambda.js pnpm-lock.yaml dist/
-          # Strip devEngines (blocks npm; pnpm restriction not needed at runtime)
-          jq 'del(.devEngines)' package.json > dist/package.json
-          cd dist
-          pnpm install --prod --ignore-scripts
-          echo "Bundle size: $(du -sh . | cut -f1)"
-          ls -la
 
       - name: CDK Bootstrap (if needed)
         run: |

@@ -1,42 +1,28 @@
 # Tarea en Curso
 
-## Phase 7: Webhooks (FEAT-008 a FEAT-011)
+## Sesion Actual: Correccion de Documentacion y Migraciones
 
-**Features**: FEAT-008, FEAT-009, FEAT-010, FEAT-011
-**Estado**: REVIEW
-**Fecha de ultima actualizacion**: 2026-06-06
+**Fecha**: 2026-06-07
+**Estado**: Completada
 
-### Implementacion completada
+### Cambios realizados en esta sesion
 
-#### Archivos CREADOS
-- `src/middleware/verifyMetaSignature.js` - HMAC-SHA256 con crypto.timingSafeEqual, factory function con appSecret opcional
-- `src/routes/webhooks.js` - GET (challenge-response) + POST (eventos), factory function con processor inyectable
-- `src/services/webhookProcessor.js` - Procesa eventos Meta (instagram/page), retorna { processed, errors }
-- `tests/verifyMetaSignature.test.js` - 7 tests unitarios (firma valida, missing, invalida, formato, 500, env, timing-safe)
-- `tests/webhookProcessor.test.js` - 7 tests unitarios (instagram, no-instagram, multiples, sin changes, vacio, page)
-- `tests/webhooks.test.js` - 8 tests integracion (GET challenge 200/403, POST 200/401/malformed/missing-sig)
+1. **Migracion Node.js 24 → Node.js 22**
+   - Corregidas referencias en `docs/conventions.md` y `docs/decisions.md`
+   - Node.js 22 es LTS estable (2024-2027)
 
-#### Archivos MODIFICADOS
-- `src/app.js` - Monta /webhooks con express.raw() ANTES de express.json() y authenticate
-- `infra/lib/ig-api-stack.js` - Agrega metaAppSecret/metaVerifyToken a props, env vars, y recurso /webhooks (GET+POST)
-- `infra/bin/app.js` - Pasa metaAppSecret y metaVerifyToken al stack
-- `.env.example` - Documenta META_APP_SECRET y META_VERIFY_TOKEN
-- `.github/workflows/ci.yml` - Agrega META_APP_SECRET y META_VERIFY_TOKEN al CDK Deploy env
+2. **FEAT-0111: aws-lambda-nodejs con esbuild**
+   - Evaluacion completada, estado actualizado a `completed`
+   - aws-lambda-nodejs ofrece bundling automatico con esbuild
 
-#### Decisiones de diseno
-- verifyMetaSignature se aplica SOLO a POST /webhooks (GET no tiene body ni firma)
-- El middleware vive dentro del router (no en app.js) para aplicar solo a POST
-- Webhooks siempre responden 200 a Meta (incluso con JSON malformado) para evitar reintentos
-- Raw body via express.raw() en app.js, parseo manual en el router
+3. **Refuerzo de reglas del Leader**
+   - Confirmacion obligatoria antes de delegar
+   - Leader no lee codigo fuente ni actualiza docs de agentes
 
-### Verificacion
-- [x] pnpm lint - 0 errores
-- [x] pnpm test - 93 tests pasan (71 existentes + 22 nuevos)
-- [x] Sin nuevas dependencias (solo node:crypto)
-- [x] Tests en tests/ (regla estricta)
-- [x] JSDoc en funciones publicas
-- [x] Factory functions con dependencias inyectables
+4. **Correccion de documentacion**
+   - Revision de inconsistencias encontradas por Reviewer
+   - Todas las correcciones aplicadas
 
-### Pendiente
-- [ ] Reviewer approval
-- [ ] Marcar features como completed en feature_list.json
+### Proximo paso
+- Continuar con Phase 7: Webhooks (FEAT-008 a FEAT-011)
+- Features FEAT-008/009/010/011 en estado `in_progress`

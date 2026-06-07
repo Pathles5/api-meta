@@ -6,7 +6,8 @@ import {
   MethodLoggingLevel,
 } from "aws-cdk-lib/aws-apigateway";
 import { Table, BillingMode, AttributeType } from "aws-cdk-lib/aws-dynamodb";
-import { Runtime, Function, Code, Architecture } from "aws-cdk-lib/aws-lambda";
+import { Architecture, Runtime } from "aws-cdk-lib/aws-lambda";
+import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { resolve } from "path";
 
 export class IgApiStack extends Stack {
@@ -23,12 +24,18 @@ export class IgApiStack extends Stack {
       timeToLiveAttribute: "expiresAt",
     });
 
-    const lambda = new Function(this, `${id}-lambda`, {
+    const lambda = new NodejsFunction(this, `${id}-lambda`, {
       functionName: `${id}-api`,
       runtime: Runtime.NODEJS_22_X,
       architecture: Architecture.ARM_64,
-      handler: "lambda.handler",
-      code: Code.fromAsset(resolve(import.meta.dirname, "../../dist")),
+      handler: "handler",
+      entry: resolve(import.meta.dirname, "../../lambda.js"),
+      bundling: {
+        minify: true,
+        sourceMap: false,
+        target: "node22",
+        externalModules: ["@aws-sdk/*"],
+      },
       memorySize: 256,
       timeout: Duration.seconds(30),
       environment: {

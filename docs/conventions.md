@@ -1,7 +1,7 @@
 # Convenciones de Desarrollo (JavaScript / Node.js)
 
 ## Stack Tecnológico
-- **Runtime**: Node.js 24
+- **Runtime**: Node.js 22
 - **Package Manager**: PNPM (Nunca usar NPM o YARN)
 - **Lenguaje**: JavaScript (con JSDoc estricto para tipado) o TypeScript (si el agente lo sugiere y justifica para CDK).
 
