@@ -1,4 +1,4 @@
-﻿{
+{
     "project":  "IG-API",
     "version":  "1.0",
     "last_updated":  "2026-06-07",
@@ -150,19 +150,19 @@
                          "priority":  "medium",
                          "estimated_effort":  "medium"
                      },
-                     {
-                         "id":  "FEAT-013",
-                         "title":  "API Documentation",
-                         "description":  "OpenAPI/Swagger documentation for all endpoints",
-                         "status":  "pending",
-                         "phase":  8,
-                         "assigned_agent":  "none",
-                         "dependencies":  [
-                                              "FEAT-011"
-                                          ],
-                         "priority":  "low",
-                         "estimated_effort":  "medium"
-                     },
+                      {
+                          "id":  "FEAT-013",
+                          "title":  "API Documentation",
+                          "description":  "OpenAPI/Swagger documentation for all endpoints",
+                          "status":  "in_progress",
+                          "phase":  8,
+                          "assigned_agent":  "implementer",
+                          "dependencies":  [
+                                               "FEAT-011"
+                                           ],
+                          "priority":  "low",
+                          "estimated_effort":  "medium"
+                      },
                      {
                          "id":  "FEAT-014",
                          "title":  "Cost Review \u0026 Optimization",

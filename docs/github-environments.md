@@ -39,6 +39,7 @@ Una vez creado el environment:
 | `META_APP_SECRET` | Secret de la aplicación de Meta |
 | `META_VERIFY_TOKEN` | Token de verificación de webhooks |
 | `AUTH_API_KEY` | API key para autenticación de clientes |
+| `AWS_ACCOUNT_ID` | AWS Account ID (12 dígitos) para el rol de IAM |
 
 #### Entorno `int` (Integración)
 
@@ -51,6 +52,7 @@ Una vez creado el environment:
 | `META_APP_SECRET` | Secret de la aplicación de Meta |
 | `META_VERIFY_TOKEN` | Token de verificación de webhooks |
 | `AUTH_API_KEY` | API key para autenticación de clientes |
+| `AWS_ACCOUNT_ID` | AWS Account ID (12 dígitos) para el rol de IAM |
 
 #### Entorno `pro` (Producción)
 
@@ -63,8 +65,11 @@ Una vez creado el environment:
 | `META_APP_SECRET` | Secret de la aplicación de Meta |
 | `META_VERIFY_TOKEN` | Token de verificación de webhooks |
 | `AUTH_API_KEY` | API key para autenticación de clientes |
+| `AWS_ACCOUNT_ID` | AWS Account ID (12 dígitos) para el rol de IAM |
 
 > **Nota**: En producción, usa tokens con permisos mínimos y considera usar roles de IAM más restrictivos.
+
+> **Importante**: El secret `AWS_ACCOUNT_ID` debe ser el mismo valor en todos los environments (pre, int, pro) ya que se usa para asumir el mismo rol de IAM.
 
 ## Cómo lee los secrets el CI/CD
 
@@ -79,6 +84,7 @@ deploy:
       env:
         META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
         META_IG_USER_ID: ${{ secrets.META_IG_USER_ID }}
+        AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
         # ... otros secrets
 ```
 

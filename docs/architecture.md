@@ -15,3 +15,28 @@
 - **Repositorio**: GitHub es la fuente de verdad del código.
 - **CI/CD**: GitHub Actions para pruebas y despliegue.
 - **Secretos**: NUNCA hardcodear credenciales, tokens o identificadores sensibles. Usar exclusivamente GitHub Secrets y AWS Secrets Manager / Parameter Store.
+
+## Sistema de Monitoreo y Alarmas
+
+### CloudWatch Alarms (6 alarmas)
+
+| Alarma | Métrica | Threshold | Periodo | Evaluación |
+|--------|---------|-----------|---------|------------|
+| `lambda-errors` | Lambda Errors | ≥ 1 | 5 min | 1 periodo |
+| `lambda-throttles` | Lambda Throttles | ≥ 1 | 5 min | 1 periodo |
+| `lambda-duration` | Lambda Duration p95 | ≥ 5s | 5 min | 2 periodos |
+| `api-5xx-errors` | API Gateway 5XX | ≥ 10 | 5 min | 1 periodo |
+| `api-latency` | API Gateway Latency p95 | ≥ 1s | 5 min | 2 periodos |
+| `dynamodb-read-throttle` | DynamoDB ThrottledRequests (GetItem) | > 0 | 5 min | 1 periodo |
+
+### SNS Notifications
+
+- **Topic**: `ig-api-{environment}-alarm-topic`
+- **Suscripción**: Email (configurable via `ALARM_EMAIL`)
+- **Comportamiento**: Todas las alarmas notifican tanto en estado `ALARM` como en `OK` (resolución)
+- **Costo**: $0/mes (dentro del Free Tier de SNS: 1,000 emails/mes)
+
+### CloudWatch Dashboard
+
+- **Nombre**: `ig-api-{environment}-monitoring`
+- **Widgets**: Invocaciones, Duración (p95), Errores, Throttles (Lambda), 4XX, 5XX (API Gateway)

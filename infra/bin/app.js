@@ -22,4 +22,5 @@ new IgApiStack(app, stackName, {
   logLevel: process.env.APP_LOG_LEVEL || "info",
   metaAppSecret: process.env.META_APP_SECRET,
   metaVerifyToken: process.env.META_VERIFY_TOKEN || "ig-api-verify-token",
+  alarmEmail: process.env.ALARM_EMAIL || "antonio.lopez.sarmiento@gmail.com",
 });

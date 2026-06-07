@@ -209,6 +209,7 @@ El proyecto utiliza **GitHub Environments** para gestionar secretos de forma seg
 | `META_APP_SECRET` | Secret de la app Meta | `abc123def456ghi789...` |
 | `META_VERIFY_TOKEN` | Token de verificación webhooks | `my_custom_verify_token` |
 | `AUTH_API_KEY` | API key para autenticación | `sk-test-abc123def456...` |
+| `AWS_ACCOUNT_ID` | AWS Account ID (12 dígitos) para el rol de IAM | `159177056493` |
 
 ### Cómo funciona el CI/CD con Secrets
 
@@ -226,13 +227,16 @@ CDK deploy usa estos secrets para configurar Lambda
 API desplegada con secretos configurados
 ```
 
+**Secrets adicionales para CI/CD**:
+- `AWS_ACCOUNT_ID`: AWS Account ID (12 dígitos) necesario para asumir el rol de IAM `GitHubActionsDeployRole`
+
 ### Crear Environments para otros entornos
 
 Repetir el proceso para `int` y `pro`:
 
 1. **Settings → Environments → New environment**
 2. **Nombrar**: `int` o `pro`
-3. **Añadir los mismos 5 secrets** (pueden tener valores diferentes)
+3. **Añadir los mismos 6 secrets** (pueden tener valores diferentes)
 4. **Para `pro`**: Añadir "Required reviewers" para approval manual
 
 ### Seguridad de Secretos
@@ -518,6 +522,7 @@ jobs:
           META_APP_SECRET: ${{ secrets.META_APP_SECRET }}
           META_VERIFY_TOKEN: ${{ secrets.META_VERIFY_TOKEN }}
           AUTH_API_KEY: ${{ secrets.AUTH_API_KEY }}
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
 ```
 
 ### AWS Resources Created
@@ -545,6 +550,7 @@ pnpm cdk deploy --require-approval never
 |----------|--------|-----|
 | `AWS_ACCESS_KEY_ID` | GitHub Secret | Autenticación AWS |
 | `AWS_SECRET_ACCESS_KEY` | GitHub Secret | Autenticación AWS |
+| `AWS_ACCOUNT_ID` | GitHub Environment | AWS Account ID para rol IAM |
 | `META_ACCESS_TOKEN` | GitHub Environment | API de Meta |
 | `META_IG_USER_ID` | GitHub Environment | Instagram Business |
 | `META_APP_SECRET` | GitHub Environment | Webhooks HMAC |

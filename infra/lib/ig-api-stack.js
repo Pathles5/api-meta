@@ -1,5 +1,6 @@
 import { Duration, Stack, Tags } from "aws-cdk-lib";
-import { Alarm, Dashboard, GraphWidget } from "aws-cdk-lib/aws-cloudwatch";
+import { Alarm, Dashboard, GraphWidget, Metric } from "aws-cdk-lib/aws-cloudwatch";
+import { SnsAction } from "aws-cdk-lib/aws-cloudwatch-actions";
 import {
   LambdaRestApi,
   EndpointType,
@@ -8,13 +9,15 @@ import {
 import { Table, BillingMode, AttributeType } from "aws-cdk-lib/aws-dynamodb";
 import { Architecture, Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
+import { Topic } from "aws-cdk-lib/aws-sns";
+import { EmailSubscription } from "aws-cdk-lib/aws-sns-subscriptions";
 import { resolve } from "path";
 
 export class IgApiStack extends Stack {
   constructor(scope, id, props = {}) {
     super(scope, id, props);
 
-    const { tableName, environment, metaAccessToken, igUserId, authApiKey, verificationHours, logLevel, metaAppSecret, metaVerifyToken } =
+    const { tableName, environment, metaAccessToken, igUserId, authApiKey, verificationHours, logLevel, metaAppSecret, metaVerifyToken, alarmEmail } =
       props;
 
     const table = new Table(this, `${id}-posts-table`, {
@@ -53,19 +56,46 @@ export class IgApiStack extends Stack {
 
     table.grantReadWriteData(lambda);
 
-    new Alarm(this, `${id}-lambda-errors`, {
+    // ── SNS Topic for alarm notifications ──
+    const alarmTopic = new Topic(this, `${id}-alarm-topic`, {
+      topicName: `${id}-alarm-topic`,
+    });
+
+    if (alarmEmail) {
+      alarmTopic.addSubscription(new EmailSubscription(alarmEmail));
+    }
+
+    const snsAction = new SnsAction(alarmTopic);
+
+    const lambdaErrorsAlarm = new Alarm(this, `${id}-lambda-errors`, {
       metric: lambda.metricErrors({ period: Duration.minutes(5) }),
       threshold: 1,
       evaluationPeriods: 1,
       alarmDescription: "Lambda function errors",
     });
+    lambdaErrorsAlarm.addAlarmAction(snsAction);
+    lambdaErrorsAlarm.addOkAction(snsAction);
 
-    new Alarm(this, `${id}-lambda-throttles`, {
+    const lambdaThrottlesAlarm = new Alarm(this, `${id}-lambda-throttles`, {
       metric: lambda.metricThrottles({ period: Duration.minutes(5) }),
       threshold: 1,
       evaluationPeriods: 1,
       alarmDescription: "Lambda function throttles",
     });
+    lambdaThrottlesAlarm.addAlarmAction(snsAction);
+    lambdaThrottlesAlarm.addOkAction(snsAction);
+
+    const lambdaDurationAlarm = new Alarm(this, `${id}-lambda-duration`, {
+      metric: lambda.metricDuration({
+        period: Duration.minutes(5),
+        statistic: "p95",
+      }),
+      threshold: 5000, // 5 segundos
+      evaluationPeriods: 2,
+      alarmDescription: "Lambda p95 duration exceeds 5s",
+    });
+    lambdaDurationAlarm.addAlarmAction(snsAction);
+    lambdaDurationAlarm.addOkAction(snsAction);
 
     const api = new LambdaRestApi(this, `${id}-api-gateway`, {
       restApiName: `${id}-api`,
@@ -99,6 +129,48 @@ export class IgApiStack extends Stack {
     const webhooks = api.root.addResource("webhooks");
     webhooks.addMethod("GET");
     webhooks.addMethod("POST");
+
+    // ── API Gateway & DynamoDB alarms ──
+    const api5xxAlarm = new Alarm(this, `${id}-api-5xx-errors`, {
+      metric: api.metricServerError({ period: Duration.minutes(5) }),
+      threshold: 10,
+      evaluationPeriods: 1,
+      alarmDescription: "API Gateway 5XX errors > 10 in 5 min",
+    });
+    api5xxAlarm.addAlarmAction(snsAction);
+    api5xxAlarm.addOkAction(snsAction);
+
+    const apiLatencyAlarm = new Alarm(this, `${id}-api-latency`, {
+      metric: api.metricLatency({
+        period: Duration.minutes(5),
+        statistic: "p95",
+      }),
+      threshold: 1000, // 1 segundo
+      evaluationPeriods: 2,
+      alarmDescription: "API Gateway p95 latency exceeds 1s",
+    });
+    apiLatencyAlarm.addAlarmAction(snsAction);
+    apiLatencyAlarm.addOkAction(snsAction);
+
+    const readThrottleMetric = new Metric({
+      namespace: "AWS/DynamoDB",
+      metricName: "ThrottledRequests",
+      dimensionsMap: {
+        TableName: table.tableName,
+        Operation: "GetItem",
+      },
+      period: Duration.minutes(5),
+      statistic: "Sum",
+    });
+
+    const dynamoThrottleAlarm = new Alarm(this, `${id}-dynamodb-read-throttle`, {
+      metric: readThrottleMetric,
+      threshold: 0,
+      evaluationPeriods: 1,
+      alarmDescription: "DynamoDB read throttles detected",
+    });
+    dynamoThrottleAlarm.addAlarmAction(snsAction);
+    dynamoThrottleAlarm.addOkAction(snsAction);
 
     // CloudWatch Dashboard
     const dashboard = new Dashboard(this, `${id}-dashboard`, {
@@ -162,6 +234,9 @@ export class IgApiStack extends Stack {
 
     Tags.of(dashboard).add("Resource", "CloudWatch");
     Tags.of(dashboard).add("Name", `${id}-monitoring`);
+
+    Tags.of(alarmTopic).add("Resource", "SNS");
+    Tags.of(alarmTopic).add("Name", `${id}-alarm-topic`);
 
     this.apiUrl = api.url;
   }

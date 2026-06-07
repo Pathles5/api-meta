@@ -3,15 +3,32 @@ info:
   title: IG-API - Instagram REST API
   description: REST API that integrates with Meta Instagram Graph API to retrieve posts and handle webhook events
   version: 1.0.0
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
   contact:
     name: IG-API Support
 
+tags:
+  - name: Health
+    description: Health check endpoints
+  - name: Posts
+    description: Instagram posts management
+  - name: Webhooks
+    description: Meta webhook endpoints
+
 servers:
-  - url: https://{api-id}.execute-api.eu-west-1.amazonaws.com/prod
+  - url: https://{api-id}.execute-api.{region}.amazonaws.com/{stage}
     description: Production (AWS API Gateway)
     variables:
       api-id:
+        default: '0kp591p5k7'
         description: API Gateway ID
+      region:
+        default: eu-west-1
+      stage:
+        default: pre
+        enum: [pre, int, pro]
 
 components:
   securitySchemes:
@@ -54,6 +71,14 @@ components:
           type: integer
         commentsCount:
           type: integer
+        thumbnailUrl:
+          type: string
+          format: uri
+          description: URL de la miniatura (para videos)
+        createdAt:
+          type: string
+          format: date-time
+          description: Fecha de creación en DynamoDB
         lastVerificationDate:
           type: string
           format: date-time
@@ -67,14 +92,36 @@ components:
       properties:
         error:
           type: string
-        statusCode:
-          type: integer
+        stack:
+          type: string
+          description: Solo presente en modo desarrollo
+
+    WebhookPayload:
+      type: object
+      properties:
+        object:
+          type: string
+          enum: [instagram, page]
+        entry:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              time:
+                type: integer
+              changes:
+                type: array
+                items:
+                  type: object
 
 paths:
   /health:
     get:
       summary: Health check
       operationId: getHealth
+      tags: [Health]
       responses:
         '200':
           description: Service is healthy
@@ -86,11 +133,31 @@ paths:
                   status:
                     type: string
                     example: ok
+                  timestamp:
+                    type: string
+                    format: date-time
+              examples:
+                healthCheck:
+                  value:
+                    status: ok
+                    timestamp: '2026-06-07T10:00:00.000Z'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait before retrying
 
   /posts:
     get:
       summary: List posts from Meta API
       operationId: listPosts
+      tags: [Posts]
       security:
         - ApiKeyAuth: []
       parameters:
@@ -113,38 +180,75 @@ paths:
                   data:
                     type: array
                     items:
-                      "$ref": '#/components/schemas/Post'
+                      $ref: '#/components/schemas/Post'
                   paging:
                     type: object
+              examples:
+                listPosts:
+                  value:
+                    data:
+                      - id: '17841478291207902'
+                        caption: 'Example post'
+                        mediaType: IMAGE
+                        mediaUrl: 'https://example.com/image.jpg'
+                        permalink: 'https://instagram.com/p/abc123'
+                        timestamp: '2026-06-07T10:00:00+0000'
+                        likeCount: 42
+                        commentsCount: 5
+                        thumbnailUrl: null
+                        createdAt: '2026-06-07T10:00:00.000Z'
+                        expiresAt: 1725580800
+                    paging:
+                      cursors:
+                        before: 'abc123'
+                        after: 'def456'
         '400':
           description: Invalid limit parameter
           content:
             application/json:
               schema:
-                "$ref": '#/components/schemas/Error'
+                $ref: '#/components/schemas/Error'
         '401':
           description: Missing API key
           content:
             application/json:
               schema:
-                "$ref": '#/components/schemas/Error'
+                $ref: '#/components/schemas/Error'
         '403':
           description: Invalid API key
           content:
             application/json:
               schema:
-                "$ref": '#/components/schemas/Error'
-        '500':
-          description: Meta API error
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
           content:
             application/json:
               schema:
-                "$ref": '#/components/schemas/Error'
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait before retrying
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: Bad Gateway - Meta API error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /posts/{id}:
     get:
       summary: Get single post by ID
       operationId: getPost
+      tags: [Posts]
       security:
         - ApiKeyAuth: []
       parameters:
@@ -160,36 +264,48 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": '#/components/schemas/Post'
+                $ref: '#/components/schemas/Post'
         '400':
           description: Invalid post ID
           content:
             application/json:
               schema:
-                "$ref": '#/components/schemas/Error'
+                $ref: '#/components/schemas/Error'
         '401':
           description: Missing or invalid API key
           content:
             application/json:
               schema:
-                "$ref": '#/components/schemas/Error'
+                $ref: '#/components/schemas/Error'
         '404':
           description: Post not found
           content:
             application/json:
               schema:
-                "$ref": '#/components/schemas/Error'
+                $ref: '#/components/schemas/Error'
         '429':
-          description: Rate limit exceeded
+          description: Too Many Requests - Rate limit exceeded
           content:
             application/json:
               schema:
-                "$ref": '#/components/schemas/Error'
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait before retrying
+        '502':
+          description: Bad Gateway - Meta API error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /posts/sync:
     post:
       summary: Sync posts from Meta API to DynamoDB
       operationId: syncPosts
+      tags: [Posts]
       security:
         - ApiKeyAuth: []
       requestBody:
@@ -216,24 +332,42 @@ paths:
                   data:
                     type: array
                     items:
-                      "$ref": '#/components/schemas/Post'
+                      $ref: '#/components/schemas/Post'
         '400':
           description: Invalid limit
           content:
             application/json:
               schema:
-                "$ref": '#/components/schemas/Error'
+                $ref: '#/components/schemas/Error'
         '401':
           description: Missing or invalid API key
           content:
             application/json:
               schema:
-                "$ref": '#/components/schemas/Error'
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait before retrying
+        '502':
+          description: Bad Gateway - Meta API error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /posts/verify:
     post:
       summary: Verify stale posts against Meta API
       operationId: verifyPosts
+      tags: [Posts]
       security:
         - ApiKeyAuth: []
       requestBody:
@@ -255,33 +389,66 @@ paths:
               schema:
                 type: object
                 properties:
-                  total:
-                    type: integer
-                  verified:
-                    type: integer
-                  deleted:
-                    type: integer
-                  rateLimited:
-                    type: integer
-                  errors:
-                    type: integer
+                  summary:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      verified:
+                        type: integer
+                      deleted:
+                        type: integer
+                      rateLimited:
+                        type: integer
+                      errors:
+                        type: integer
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        status:
+                          type: string
+                          enum: [verified, deleted, rate_limited, error]
+                        error:
+                          type: string
         '400':
           description: Invalid limit
           content:
             application/json:
               schema:
-                "$ref": '#/components/schemas/Error'
+                $ref: '#/components/schemas/Error'
         '401':
           description: Missing or invalid API key
           content:
             application/json:
               schema:
-                "$ref": '#/components/schemas/Error'
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait before retrying
+        '502':
+          description: Bad Gateway - Meta API error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /webhooks:
     get:
       summary: Webhook subscription verification (Meta challenge-response)
       operationId: verifyWebhookSubscription
+      tags: [Webhooks]
       parameters:
         - name: hub.mode
           in: query
@@ -312,10 +479,22 @@ paths:
             text/plain:
               schema:
                 type: string
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait before retrying
 
     post:
       summary: Receive webhook events from Meta
       operationId: receiveWebhookEvent
+      tags: [Webhooks]
       security:
         - WebhookSignature: []
       requestBody:
@@ -323,8 +502,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              description: Meta webhook payload
+              $ref: '#/components/schemas/WebhookPayload'
       responses:
         '200':
           description: Event received (always returns 200 to Meta)
@@ -338,4 +516,21 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": '#/components/schemas/Error'
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait before retrying
+        '500':
+          description: Internal Server Error - META_APP_SECRET not configured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'

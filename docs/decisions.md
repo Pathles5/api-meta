@@ -839,6 +839,54 @@ GitHub Actions (CI/CD)
 
 ---
 
+## 2026-06-07: Parametrización del AWS Account ID en CI/CD
+
+### Decision: AWS_ACCOUNT_ID Secret
+
+**Contexto**: El AWS Account ID estaba hardcodeado en el workflow de CI/CD (`.github/workflows/ci.yml`), específicamente en el ARN del rol de IAM: `arn:aws:iam::159177056493:role/GitHubActionsDeployRole`. Esto presenta riesgos de seguridad y limita la portabilidad del proyecto.
+
+**Decisión**: Parametrizar el AWS Account ID usando un secret de GitHub Actions (`AWS_ACCOUNT_ID`), eliminando el valor hardcodeado del código fuente.
+
+**Antes**:
+```yaml
+role-to-assume: arn:aws:iam::159177056493:role/GitHubActionsDeployRole
+```
+
+**Ahora**:
+```yaml
+role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GitHubActionsDeployRole
+```
+
+**Rationale**:
+1. **Seguridad**: El número de cuenta de AWS es información sensible que no debe exponerse en código fuente
+2. **Portabilidad**: El mismo workflow funciona para diferentes cuentas de AWS sin modificar código
+3. **Consistencia**: Todos los environments usan el mismo valor sin duplicación en código
+4. **Facilidad de mantenimiento**: Cambiar la cuenta de AWS requiere solo actualizar el secret, no el código
+5. **Cumplimiento**: Sigue las mejores prácticas de seguridad de AWS y GitHub
+
+**Alternatives considered**:
+1. **Mantener hardcodeado**: Rechazada - expone información sensible en el repositorio
+2. **Usar variable de entorno en vez de secret**: Rechazada - el Account ID es información sensible que debe estar encriptada
+3. **Usar diferentes cuentas por entorno**: Rechazada - innecesario para este proyecto, todos los entornos usan la misma cuenta de AWS
+
+**Consequences**:
+- **Positivas**: Mejora seguridad, portabilidad y mantenibilidad
+- **Negativas**: Requiere configurar un nuevo secret en cada GitHub Environment
+- **Requiere**: El secret `AWS_ACCOUNT_ID` debe configurarse en los environments `pre`, `int` y `pro` con el mismo valor (12 dígitos)
+
+**Secrets requeridos actualizados**:
+
+| Secret | Descripción |
+|--------|-------------|
+| `META_ACCESS_TOKEN` | Token de acceso Meta/Facebook |
+| `META_IG_USER_ID` | ID de cuenta Instagram Business |
+| `META_APP_SECRET` | Secret de la app Meta |
+| `META_VERIFY_TOKEN` | Token de verificación webhooks |
+| `AUTH_API_KEY` | API key para autenticación |
+| `AWS_ACCOUNT_ID` | AWS Account ID (12 dígitos) |
+
+---
+
 ## Pending Items
 
 - [x] ~~Update Meta Graph API from v19.0 to v24.0~~ ✅ Completed

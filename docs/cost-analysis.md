@@ -9,8 +9,9 @@ Todos los recursos están dentro del **AWS Free Tier** para uso moderado.
 | Lambda | 1M requests/mes + 400,000 GB-seconds | < 100K requests | **$0** |
 | API Gateway | 1M requests/mes | < 100K requests | **$0** |
 | DynamoDB | 25 GB storage + 25 WCU/25 RCU | < 1 GB | **$0** |
-| CloudWatch | 10 métricas + 5 alarms + 3 dashboards | 6 métricas + 2 alarms + 1 dashboard | **$0** |
+| CloudWatch | 10 métricas + 5 alarms + 3 dashboards | 9 métricas + 6 alarms + 1 dashboard | **$0.10** (1 alarma excede Free Tier) |
 | CloudWatch Logs | 5 GB ingestión + 5 GB storage | < 1 GB | **$0** |
+| SNS | 1,000 email notifications/mes | < 100 (solo alarmas) | **$0** |
 
 **Total mensual estimado: $0** (dentro de Free Tier)
 
@@ -84,13 +85,15 @@ Todos los recursos están dentro del **AWS Free Tier** para uso moderado.
 - 5 GB de logs (ingestión + storage)
 
 **Configuración actual:**
-- Métricas: 6 (Lambda: Invocations, Duration, Errors, Throttles + API Gateway: 4XX, 5XX)
-- Alarms: 2 (Lambda errors, Lambda throttles)
+- Métricas: 9 (Lambda: Invocations, Duration, Errors, Throttles + API Gateway: 4XX, 5XX, Latency + DynamoDB: ThrottledRequests)
+- Alarms: 6 (Lambda: errors, throttles, duration + API: 5XX, latency + DynamoDB: read throttles)
 - Dashboards: 1 (ig-api-monitoring)
 
+**Nota:** 6 alarms excede el Free Tier de 5 por 1 alarma → **$0.10/mes** extra.
+
 **Uso estimado:**
-- Métricas: 6/10 (60% del Free Tier)
-- Alarms: 2/5 (40% del Free Tier)
+- Métricas: 9/10 (90% del Free Tier)
+- Alarms: 6/5 (120% del Free Tier — 1 alarma cuesta $0.10/mes)
 - Dashboards: 1/3 (33% del Free Tier)
 
 **Costo si excede Free Tier:**
@@ -115,6 +118,26 @@ Todos los recursos están dentro del **AWS Free Tier** para uso moderado.
 **Costo si excede Free Tier:**
 - $0.50 por GB de ingestión
 - $0.03 por GB de almacenamiento
+
+### Amazon SNS
+
+**Free Tier:**
+- 1,000,000 publishes/mes
+- 1,000 email notifications/mes
+
+**Configuración actual:**
+- 1 SNS Topic (`ig-api-${environment}-alarm-topic`)
+- 1 suscripción de email (antonio.lopez.sarmiento@gmail.com)
+- Uso: solo notificaciones de alarma (eventos raros)
+
+**Uso estimado:**
+- Publicaciones: < 100/mes (solo cuando se disparan alarmas)
+- Notificaciones email: < 100/mes
+- Ambos muy por debajo del Free Tier
+
+**Costo si excede Free Tier:**
+- $0.50 por 1M publishes
+- $2.00 por 100,000 email notifications
 
 ---
 
