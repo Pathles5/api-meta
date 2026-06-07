@@ -183,14 +183,15 @@
                          "id":  "FEAT-015",
                          "title":  "Load \u0026 Stress Testing",
                          "description":  "Performance testing, identify bottlenecks",
-                         "status":  "pending",
+                         "status":  "deferred",
                          "phase":  8,
                          "assigned_agent":  "none",
                          "dependencies":  [
                                               "FEAT-011"
                                           ],
                          "priority":  "low",
-                         "estimated_effort":  "large"
+                         "estimated_effort":  "large",
+                         "deferred_reason":  "Load \u0026 Stress Testing deferred until app is closer to release to avoid unnecessary costs. Will be implemented when there is real traffic to test against."
                      },
                      {
                          "id":  "FEAT-016",
