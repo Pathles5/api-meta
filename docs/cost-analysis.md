@@ -28,7 +28,7 @@ Todos los recursos están dentro del **AWS Free Tier** para uso moderado.
 
 **Configuración actual:**
 - Memoria: 256 MB
-- Timeout: 30 segundos
+- Timeout: 15 segundos (reducido de 30s para optimizar costes)
 - Bundle size: ~12 MB
 
 **Uso estimado:**
@@ -110,6 +110,8 @@ Todos los recursos están dentro del **AWS Free Tier** para uso moderado.
 **Configuración actual:**
 - API Gateway access logs: INFO level
 - Lambda logs: Pino logger (APP_LOG_LEVEL=info)
+- Retención de logs: 30 días (configurado vía LogGroup con `RetentionDays.ONE_MONTH`)
+- Política de eliminación: `RemovalPolicy.DESTROY` (logs se eliminan al destruir el stack)
 
 **Uso estimado:**
 - Ingestión: < 1 GB/mes (20% del Free Tier)
@@ -169,9 +171,10 @@ Todos los recursos están dentro del **AWS Free Tier** para uso moderado.
 
 1. **Monitorear uso mensual** — Revisar AWS Cost Explorer cada mes
 2. **Configurar budget alerts** — Crear alerta en AWS Budgets para > $1/mes
-3. **Optimizar Lambda** — Si duración > 1s, considerar reducir memoria o optimizar código
+3. **Optimizar Lambda** — Timeout reducido a 15s (desde 30s). Si duración > 1s, considerar reducir memoria u optimizar código
 4. **DynamoDB TTL** — Ya configurado, posts expiran automáticamente a 30 días
 5. **API Gateway caching** — Si uso crece, considerar habilitar caching para reducir llamadas a Lambda
+6. **Logs retention** — Configurado a 30 días para evitar acumulación indefinida y mantenerse dentro del Free Tier de 5 GB
 
 ---
 

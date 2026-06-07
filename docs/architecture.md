@@ -36,6 +36,19 @@
 - **Comportamiento**: Todas las alarmas notifican tanto en estado `ALARM` como en `OK` (resolución)
 - **Costo**: $0/mes (dentro del Free Tier de SNS: 1,000 emails/mes)
 
+### AWS Budgets (Configuración Manual)
+
+- **Nombre del budget**: `ig-api-cost-alert`
+- **Tipo**: Fixed (presupuesto fijo mensual)
+- **Monto**: 3€ (equivalente en USD según tipo de cambio)
+- **Periodo**: Mensual (se reinicia cada mes)
+- **Alerta**: Se dispara cuando el gasto real alcanza 100% del presupuesto (3€)
+- **Notificación**: Email via SNS Topic `ig-api-pre-alarm-topic`
+- **Configuración**: Manual en AWS Console → Billing → Budgets
+- **Costo**: Gratis (2 presupuestos gratuitos en Free Tier)
+
+**Nota**: Este budget monitorea el costo global de toda la cuenta AWS, no solo del proyecto IG-API.
+
 ### CloudWatch Dashboard
 
 - **Nombre**: `ig-api-{environment}-monitoring`

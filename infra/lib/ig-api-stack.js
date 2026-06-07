@@ -1,4 +1,4 @@
-import { Duration, Stack, Tags } from "aws-cdk-lib";
+import { Duration, RemovalPolicy, Stack, Tags } from "aws-cdk-lib";
 import { Alarm, Dashboard, GraphWidget, Metric } from "aws-cdk-lib/aws-cloudwatch";
 import { SnsAction } from "aws-cdk-lib/aws-cloudwatch-actions";
 import {
@@ -8,6 +8,7 @@ import {
 } from "aws-cdk-lib/aws-apigateway";
 import { Table, BillingMode, AttributeType } from "aws-cdk-lib/aws-dynamodb";
 import { Architecture, Runtime } from "aws-cdk-lib/aws-lambda";
+import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Topic } from "aws-cdk-lib/aws-sns";
 import { EmailSubscription } from "aws-cdk-lib/aws-sns-subscriptions";
@@ -27,6 +28,16 @@ export class IgApiStack extends Stack {
       timeToLiveAttribute: "expiresAt",
     });
 
+    // ── Lambda LogGroup con retención de 30 días ──
+    // Al crear el LogGroup explícitamente y pasarlo a la Lambda, evitamos que
+    // CDK cree uno automático sin retención, lo cual podría exceder el Free Tier
+    // de CloudWatch Logs (5 GB) por acumulación indefinida.
+    const lambdaLogGroup = new LogGroup(this, `${id}-lambda-logs`, {
+      logGroupName: `/aws/lambda/${id}-api`,
+      retention: RetentionDays.ONE_MONTH,
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+
     const lambda = new NodejsFunction(this, `${id}-lambda`, {
       functionName: `${id}-api`,
       runtime: Runtime.NODEJS_22_X,
@@ -39,8 +50,9 @@ export class IgApiStack extends Stack {
         target: "node22",
         externalModules: ["@aws-sdk/*"],
       },
+      logGroup: lambdaLogGroup,
       memorySize: 256,
-      timeout: Duration.seconds(30),
+      timeout: Duration.seconds(15),
       environment: {
         DYNAMODB_TABLE_NAME: tableName,
         META_ACCESS_TOKEN: metaAccessToken,
