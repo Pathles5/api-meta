@@ -1,35 +1,81 @@
-# Historial de Sesiones
+﻿# Historial de Sesiones
+
+## 2026-06-07: Phase 8 Completion - Production Readiness
+
+### Tareas completadas
+
+#### FEAT-012: CloudWatch Monitoring con SNS
+- Creado SNS Topic ig-api-pre-alarm-topic con suscripción email
+- Configuradas 6 alarmas: Lambda errors/throttles/duration, API Gateway 5xx/latency, DynamoDB throttles
+- Todas las alarmas conectadas a SNS para notificaciones
+- Email: antonio.lopez.sarmiento@gmail.com
+- Costo: $0.10/mes (1 alarma fuera del Free Tier)
+- Resumen: progress/feat_012_sns_implementation.md
+
+#### FEAT-013: API Documentation (OpenAPI fixes)
+- Corregido schema POST /posts/verify (estructura {summary, results})
+- Corregido schema Error (eliminado statusCode, añadido stack)
+- Añadidos campos faltantes: 	humbnailUrl, createdAt en Post schema
+- Añadido 	imestamp en GET /health response
+- Añadido WebhookPayload schema
+- Añadidas respuestas 429, 502, 500 en endpoints correspondientes
+- Añadidos tags, examples, license info, server variables completadas
+- Resumen: progress/feat_013_openapi_fixes.md
+
+#### FEAT-014: Cost Review & Optimization
+- Configurado CloudWatch Logs retention (30 días) para evitar acumulación infinita
+- Reducido Lambda timeout de 30s a 15s (optimización conservadora)
+- Actualizada documentación de costos
+- Resumen: progress/feat_014_cost_optimization.md
+
+### Mejoras de seguridad
+
+#### IAM Policy Restringida
+- Reemplazado rol AdministratorAccess por política IAM específica
+- Permisos limitados a recursos del proyecto (prefijo ig-api-*)
+- Permisos para CDK Bootstrap (CloudFormation, S3, IAM roles)
+- Permisos para despliegue (Lambda, API Gateway, DynamoDB, CloudWatch, SNS)
+- Limitado a región eu-west-1
+- **Nota**: Política no documentada en el repo por seguridad
+
+#### AWS Budgets
+- Configurado manualmente en AWS Console
+- Alerta cuando el costo global de la cuenta supere 3€
+- Notificación via SNS Topic existente
+- Documentado en docs/architecture.md
+
+### Organización del proyecto
+
+#### Backlog creado
+- Nueva sección acklog en eature_list.json
+- Tareas diferidas:
+  - FEAT-015: Load & Stress Testing (hasta que la app esté cerca de release)
+  - FEAT-017: Image Storage Strategy (pendiente de decisión)
+- 
+ext_actions actualizado con tareas de Phase 9
+
+### Estado final de Phase 8
+- ✅ FEAT-011: Webhook Processing
+- ✅ FEAT-0111: aws-lambda-nodejs evaluation
+- ✅ FEAT-012: CloudWatch Monitoring
+- ✅ FEAT-013: API Documentation
+- ✅ FEAT-014: Cost Review & Optimization
+- ✅ FEAT-016: Test Coverage Configuration
+- ⏸️ FEAT-015: Load & Stress Testing (backlog)
+- ⏸️ FEAT-017: Image Storage Strategy (backlog)
+
+### Próximas tareas (Phase 9)
+1. FEAT-022: Define DynamoDB Data Model
+2. FEAT-019: META Token Management from AWS Systems Manager
+3. FEAT-020: Evaluate META Token Strategy
+4. FEAT-023: API Endpoint - Get Post by ID
+5. FEAT-024: API Endpoint - Get N Posts
+6. FEAT-025: Grok AI Integration
+7. FEAT-026: Extract Price from Posts with Grok
+8. FEAT-028: Evaluate Webhook Flow Change
+9. FEAT-021: Automatic META Token Rotation
+10. FEAT-027: Implement S3 Multimedia Storage
+
+---
 
 ## 2026-06-07: FEAT-016 — Test Coverage Configuration
-
-### Cambios realizados
-- `package.json`: Anadidos scripts `test:coverage` y `test:coverage:threshold`
-- `.github/workflows/ci.yml`: Anadido paso "Run tests with coverage" con thresholds del 80%
-- Sin dependencias externas (Node.js 22 nativo `--experimental-test-coverage`)
-- 93 tests pasando, cobertura: 94.03% lines, 89.37% branches, 96.36% functions
-- Resumen completo: `progress/feat_016_coverage_config.md`
-
-## 2026-06-07: Sesion de Correccion de Documentacion y Migraciones
-
-### Cambios realizados
-
-#### Migracion de Node.js 24 a Node.js 22
-- Actualizado runtime en `docs/conventions.md`, `docs/decisions.md`
-- Node.js 22 es LTS estable; Node.js 24 es experimental/inestable
-- Corregidas 3 referencias a Node.js 24 en documentacion
-
-#### Migracion a aws-lambda-nodejs con esbuild (FEAT-0111)
-- Completada evaluacion de `aws-cdk-lib/aws-lambda-nodejs` vs `aws-cdk-lib/aws-lambda`
-- FEAT-0111 actualizado a estado `completed` en `feature_list.json`
-- Beneficios: esbuild bundling automatico, tree-shaking, tiempos de build reducidos
-
-#### Refuerzo de reglas del Leader
-- Confirmacion obligatoria antes de delegar a subagentes
-- Leader nunca lee/busca archivos de codigo fuente
-- Leader nunca actualiza documentacion de agentes/harness
-
-#### Correcciones de documentacion (esta sesion)
-- `docs/conventions.md`: Node.js 24 → Node.js 22
-- `docs/decisions.md`: 2 referencias a Node.js 24 corregidas
-- `feature_list.json`: FEAT-0111 pending → completed
-- `progress/current.md`: Actualizado para reflejar estado actual
