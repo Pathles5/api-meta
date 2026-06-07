@@ -1,8 +1,16 @@
 # Tarea en Curso
 
-## Sin tarea activa
+## Feature en curso: AWS Resource Tags — Billing identification
 
 **Fecha**: 2026-06-07
+**Estado**: in_progress
+
+### Plan
+- Añadir `Tags` import desde `aws-cdk-lib`
+- Añadir tags globales al stack (Stack, Environment, Project, ManagedBy)
+- Añadir tags específicos por recurso (Lambda, API Gateway, DynamoDB, CloudWatch)
+- Verificar con `pnpm cdk synth` que el template se genera correctamente
+- Escribir resumen en `progress/feat_aws_resource_tags.md`
 
 ### Ultima tarea completada
 - **FEAT-016**: Test Coverage Configuration — completada

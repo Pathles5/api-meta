@@ -55,6 +55,7 @@ jobs:
     needs: lint-and-test
     runs-on: ubuntu-latest
     if: github.ref != 'refs/heads/dev' && github.event_name == 'push'
+    environment: ${{ github.ref_name }}
     env:
       IG_ENV: ${{ github.ref_name }}
     permissions:

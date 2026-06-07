@@ -59,58 +59,102 @@ docs/                   # Documentation and decisions
 
 ## Environment Variables
 
-Create a `.env` file based on `.env.example`:
+El proyecto utiliza **16 variables de entorno** organizadas por categoría. **4 son obligatorias** y **12 son opcionales**.
+
+### Variables de Entorno - Tabla Completa
+
+| Variable | Categoría | Obligatoria | Descripción | Valor por defecto | Ejemplo |
+|----------|-----------|-------------|-------------|-------------------|---------|
+| `META_ACCESS_TOKEN` | META | ✅ **Sí** | Token de acceso Meta/Facebook API | — | `EAABsbCS...` |
+| `META_IG_USER_ID` | META | ✅ **Sí** | ID de cuenta de Instagram Business | — | `17841400...` |
+| `META_APP_SECRET` | META | ✅ **Sí** | Secret de la app Meta (para HMAC webhooks) | — | `abc123...` |
+| `META_VERIFY_TOKEN` | META | ❌ No | Token de verificación de webhooks (lo defines tú) | — | `my_verify_token` |
+| `AUTH_API_KEY` | AUTH | ✅ **Sí** | API key para autenticación de clientes (`X-API-Key` header) | — | `sk-test-abc123...` |
+| `APP_PORT` | APP | ❌ No | Puerto del servidor | `3000` | `3000` |
+| `NODE_ENV` | APP | ❌ No | Entorno de ejecución | `development` | `production` |
+| `APP_RATE_LIMIT_WINDOW_MS` | APP | ❌ No | Ventana de rate limit en milisegundos | `60000` | `60000` |
+| `APP_RATE_LIMIT_MAX` | APP | ❌ No | Máximo de requests por ventana | `100` | `100` |
+| `APP_LOG_LEVEL` | APP | ❌ No | Nivel de log | `info` | `debug` |
+| `AWS_REGION` | AWS | ❌ No | Región de AWS | `eu-west-1` | `eu-west-1` |
+| `DYNAMODB_ENDPOINT` | DYNAMODB | ❌ No | Endpoint de DynamoDB | `http://localhost:8000` | `http://localhost:8000` |
+| `DYNAMODB_TABLE_NAME` | DYNAMODB | ❌ No | Nombre de la tabla DynamoDB | `ig-posts` | `ig-posts-pre` |
+| `DYNAMODB_POST_TTL_DAYS` | DYNAMODB | ❌ No | TTL de posts en días | `90` | `90` |
+| `POST_VERIFICATION_HOURS` | POST | ❌ No | Horas antes de re-verificación de posts | `24` | `24` |
+| `IG_ENV` | ENTORNO | ❌ No | Entorno de despliegue | `pre` | `pro` |
+
+### Categorías de Variables
+
+#### 🔷 META (4 variables)
+- **`META_ACCESS_TOKEN`** (Obligatoria): Token de acceso a la API de Meta/Facebook. Se obtiene desde [developers.facebook.com](https://developers.facebook.com/)
+- **`META_IG_USER_ID`** (Obligatoria): ID de tu cuenta de Instagram Business. Se obtiene haciendo llamadas a la API de Graph
+- **`META_APP_SECRET`** (Obligatoria): Secret de tu aplicación Meta. Se usa para verificar la autenticidad de webhooks mediante HMAC
+- **`META_VERIFY_TOKEN`** (Opcional): Token que defines tú para verificar webhooks. Se configura en el panel de Meta
+
+#### 🔐 AUTH (1 variable)
+- **`AUTH_API_KEY`** (Obligatoria): API key que los clientes usan para autenticar requests. Se envía en el header `X-API-Key`
+
+#### ⚙️ APP (5 variables)
+- **`APP_PORT`**: Puerto del servidor (solo desarrollo local)
+- **`NODE_ENV`**: Entorno de ejecución (`development`, `production`)
+- **`APP_RATE_LIMIT_WINDOW_MS`**: Ventana de tiempo para rate limiting en milisegundos
+- **`APP_RATE_LIMIT_MAX`**: Máximo de requests permitidos por ventana
+- **`APP_LOG_LEVEL`**: Nivel de log (`fatal`, `error`, `warn`, `info`, `debug`, `trace`)
+
+#### ☁️ AWS (1 variable)
+- **`AWS_REGION`**: Región de AWS donde se despliega (default: `eu-west-1` - Irlanda)
+
+#### 🗄️ DYNAMODB (3 variables)
+- **`DYNAMODB_ENDPOINT`**: Endpoint de DynamoDB. En local usa `http://localhost:8000`, en AWS se ignora
+- **`DYNAMODB_TABLE_NAME`**: Nombre de la tabla DynamoDB
+- **`DYNAMODB_POST_TTL_DAYS`**: Días que un post se mantiene antes de ser eliminado automáticamente
+
+#### 📝 POST (1 variable)
+- **`POST_VERIFICATION_HOURS`**: Horas que pasan antes de que un post sea re-verificado contra la API de Meta
+
+#### 🌍 ENTORNO (1 variable)
+- **`IG_ENV`**: Entorno de despliegue (`dev`, `pre`, `int`, `pro`). Se obtiene automáticamente del nombre de la branch
+
+### Ejemplo de archivo `.env` para desarrollo local
 
 ```env
-# Meta API
-META_ACCESS_TOKEN=your_access_token_here
-META_IG_USER_ID=your_ig_user_id_here
+# 🔷 META API (Obligatorias)
+META_ACCESS_TOKEN=EAABsbCS6X4kBAMNlRZAjZAy5ZCZA...
+META_IG_USER_ID=17841400123456789
+META_APP_SECRET=abc123def456ghi789jkl012mno345
+META_VERIFY_TOKEN=my_custom_verify_token
 
-# Authentication
-AUTH_API_KEY=your_api_key_here
+# 🔐 AUTH (Obligatoria)
+AUTH_API_KEY=sk-test-abc123def456ghi789
 
-# Application
+# ⚙️ APP (Opcionales)
 APP_PORT=3000
 NODE_ENV=development
 APP_RATE_LIMIT_WINDOW_MS=60000
 APP_RATE_LIMIT_MAX=100
 APP_LOG_LEVEL=info
 
-# AWS
+# ☁️ AWS (Opcional)
 AWS_REGION=eu-west-1
 
-# DynamoDB
+# 🗄️ DYNAMODB (Opcionales - solo para desarrollo local)
 DYNAMODB_ENDPOINT=http://localhost:8000
 DYNAMODB_TABLE_NAME=ig-posts
 DYNAMODB_POST_TTL_DAYS=90
 
-# Post Verification
+# 📝 POST (Opcional)
 POST_VERIFICATION_HOURS=24
+
+# 🌍 ENTORNO (Opcional)
+IG_ENV=dev
 ```
 
-| Variable | Prefix | Description |
-|----------|--------|-------------|
-| `META_ACCESS_TOKEN` | `META_` | Meta/Facebook API access token |
-| `META_IG_USER_ID` | `META_` | Instagram Business Account ID |
-| `AUTH_API_KEY` | `AUTH_` | API key for client authentication (`X-API-Key` header) |
-| `APP_PORT` | `APP_` | Server port (default: `3000`) |
-| `NODE_ENV` | — | Environment: `development`, `production`, etc. |
-| `APP_RATE_LIMIT_WINDOW_MS` | `APP_` | Rate limit window in ms (default: `60000`) |
-| `APP_RATE_LIMIT_MAX` | `APP_` | Max requests per window (default: `100`) |
-| `APP_LOG_LEVEL` | `APP_` | Log level: `fatal`, `error`, `warn`, `info`, `debug`, `trace` |
-| `AWS_REGION` | `AWS_` | AWS region (default: `eu-west-1`) |
-| `DYNAMODB_ENDPOINT` | `DYNAMODB_` | DynamoDB endpoint (local: `http://localhost:8000`) |
-| `DYNAMODB_TABLE_NAME` | `DYNAMODB_` | DynamoDB table name (default: `ig-posts`) |
-| `DYNAMODB_POST_TTL_DAYS` | `DYNAMODB_` | Post TTL in days (default: `90`) |
-| `POST_VERIFICATION_HOURS` | `POST_` | Hours before post re-verification (default: `24`) |
-
-### How to get META_IG_USER_ID
+### Cómo obtener `META_IG_USER_ID`
 
 ```bash
-# 1. Verify your token
+# 1. Verificar tu token
 curl -s "https://graph.facebook.com/v24.0/me?fields=id,name&access_token=TOKEN"
 
-# 2. Get your Facebook Page ID and IG User ID
+# 2. Obtener tu Facebook Page ID y IG User ID
 curl -s "https://graph.facebook.com/v24.0/me/accounts?fields=id,name,instagram_business_account&access_token=TOKEN"
 
 # Response:
@@ -122,6 +166,57 @@ curl -s "https://graph.facebook.com/v24.0/me/accounts?fields=id,name,instagram_b
 #   }]
 # }
 ```
+
+## Configuración de GitHub Secrets
+
+El proyecto utiliza **GitHub Environments** para gestionar secretos de forma segura. Cada entorno de despliegue (`pre`, `int`, `pro`) tiene su propio conjunto de secretos.
+
+### Crear GitHub Environment "pre"
+
+1. **Ir a Settings → Environments → New environment**
+2. **Nombrar el environment**: `pre`
+3. **Añadir secrets** (hacer clic en "Add secret" para cada uno):
+
+| Secret | Descripción | Ejemplo |
+|--------|-------------|---------|
+| `META_ACCESS_TOKEN` | Token de acceso Meta/Facebook | `EAABsbCS6X4kBAMN...` |
+| `META_IG_USER_ID` | ID de cuenta Instagram Business | `17841400123456789` |
+| `META_APP_SECRET` | Secret de la app Meta | `abc123def456ghi789...` |
+| `META_VERIFY_TOKEN` | Token de verificación webhooks | `my_custom_verify_token` |
+| `AUTH_API_KEY` | API key para autenticación | `sk-test-abc123def456...` |
+
+### Cómo funciona el CI/CD con Secrets
+
+```
+Push a branch "pre"
+       ↓
+GitHub Actions se activa
+       ↓
+Lee automáticamente los secrets del environment "pre"
+       ↓
+Los inyecta como variables de entorno durante el build
+       ↓
+CDK deploy usa estos secrets para configurar Lambda
+       ↓
+API desplegada con secretos configurados
+```
+
+### Crear Environments para otros entornos
+
+Repetir el proceso para `int` y `pro`:
+
+1. **Settings → Environments → New environment**
+2. **Nombrar**: `int` o `pro`
+3. **Añadir los mismos 5 secrets** (pueden tener valores diferentes)
+4. **Para `pro`**: Añadir "Required reviewers" para approval manual
+
+### Seguridad de Secretos
+
+- **Nunca** almacenes secrets en el código fuente
+- **Nunca** hagas commit de archivos `.env`
+- **Usa** GitHub Environments para gestión centralizada
+- **Usa** "Required reviewers" para producción
+- **Los secrets** se encriptan en repositorio y solo se desencriptan durante workflows
 
 ## Instagram API Request Flow
 
@@ -320,50 +415,160 @@ pnpm lint
 
 ## Deployment
 
-Deployments are automated via GitHub Actions. **Never deploy from local.**
+Los despliegues están automatizados via GitHub Actions. **Nunca despliegues desde local** (excepto en emergencias).
 
-### Pipeline Flow
+### Flujo de Despliegue Completo
 
 ```
-Push to main → GitHub Actions
-  → lint → test → CDK deploy → API live
+Push a branch "pre"
+       ↓
+GitHub Actions se activa
+       ↓
+Lee secrets del environment "pre"
+       ↓
+Ejecuta pipeline:
+  1. Lint (ESLint)
+  2. Test (Jest)
+  3. CDK deploy
+       ↓
+Despliega stack "ig-api-pre" en AWS
+       ↓
+API disponible en:
+https://xxxxx.execute-api.eu-west-1.amazonaws.com/prod/
 ```
 
-### Required GitHub Secrets
+### Despliegue por Entorno
 
-Configure these in your repository: **Settings → Secrets and variables → Actions**
+| Entorno | Trigger | Despliegue | Aprobación |
+|---------|---------|------------|------------|
+| `dev` | Push a `dev` | ❌ **No** (solo local) | N/A |
+| `pre` | Push a `pre` | ✅ Automático | No |
+| `int` | Push a `int` | ✅ Automático | No |
+| `pro` | Push a `pro` | ✅ Automático | ✅ **Manual** |
 
-| Secret | Description |
-|--------|-------------|
-| `AWS_ACCESS_KEY_ID` | AWS IAM user access key |
-| `AWS_SECRET_ACCESS_KEY` | AWS IAM user secret key |
-| `META_ACCESS_TOKEN` | Meta/Facebook API access token |
-| `META_IG_USER_ID` | Instagram Business Account ID |
-| `AUTH_API_KEY` | API key for client authentication |
+### GitHub Environments
+
+Los secrets se organizan por **GitHub Environments** para mantener el aislamiento entre entornos.
+
+**Crear Environment "pre":**
+1. Ir a **Settings → Environments → New environment**
+2. Nombrar: `pre`
+3. Añadir secrets (ver sección [Configuración de GitHub Secrets](#configuración-de-github-secrets))
+
+**Crear Environment "pro" (con approval):**
+1. Ir a **Settings → Environments → New environment**
+2. Nombrar: `pro`
+3. Añadir secrets
+4. Activar **"Required reviewers"**
+5. Añadir reviewers para approval manual
+
+### Pipeline de GitHub Actions
+
+```yaml
+# .github/workflows/deploy.yml (simplificado)
+name: Deploy
+on:
+  push:
+    branches: [pre, int, pro]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name }}  # Usa el nombre de la branch como environment
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm cdk deploy --require-approval never
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+          META_IG_USER_ID: ${{ secrets.META_IG_USER_ID }}
+          META_APP_SECRET: ${{ secrets.META_APP_SECRET }}
+          META_VERIFY_TOKEN: ${{ secrets.META_VERIFY_TOKEN }}
+          AUTH_API_KEY: ${{ secrets.AUTH_API_KEY }}
+```
 
 ### AWS Resources Created
 
-- **Lambda Function**: `ig-api` (Node.js 22, ARM64, 256MB)
-- **API Gateway**: REST API (Regional, eu-west-1)
-- **DynamoDB Table**: `ig-posts` (PAY_PER_REQUEST)
+Cada entorno cloud (`pre`, `int`, `pro`) despliega:
 
-### Manual Deploy (emergency only)
+| Recurso | Nombre | Configuración |
+|---------|--------|---------------|
+| **Lambda Function** | `ig-api-{env}` | Node.js 22, ARM64, 256MB |
+| **API Gateway** | REST API (Regional) | eu-west-1 |
+| **DynamoDB Table** | `ig-posts-{env}` | PAY_PER_REQUEST |
+| **CloudWatch Dashboard** | `ig-api-{env}-dashboard` | Métricas básicas |
+
+### Manual Deploy (solo emergencias)
 
 ```bash
-# Requires AWS CLI configured locally
+# Requiere AWS CLI configurado localmente
+# ⚠️ Solo usar en emergencias
 pnpm cdk deploy --require-approval never
 ```
 
+### Variables de Entorno en Despliegue
+
+| Variable | Fuente | Uso |
+|----------|--------|-----|
+| `AWS_ACCESS_KEY_ID` | GitHub Secret | Autenticación AWS |
+| `AWS_SECRET_ACCESS_KEY` | GitHub Secret | Autenticación AWS |
+| `META_ACCESS_TOKEN` | GitHub Environment | API de Meta |
+| `META_IG_USER_ID` | GitHub Environment | Instagram Business |
+| `META_APP_SECRET` | GitHub Environment | Webhooks HMAC |
+| `META_VERIFY_TOKEN` | GitHub Environment | Verificación webhooks |
+| `AUTH_API_KEY` | GitHub Environment | Autenticación clientes |
+| `IG_ENV` | Branch name | Determina entorno |
+| `NODE_ENV` | Fijo: `production` | Modo de ejecución |
+| `DYNAMODB_TABLE_NAME` | CDK construct | Nombre de tabla |
+| `AWS_REGION` | Fijo: `eu-west-1` | Región AWS |
+
 ## 🌍 Entornos
 
-El proyecto soporta múltiples entornos con stacks CDK independientes:
+El proyecto soporta **4 entornos** con stacks CDK independientes. Cada entorno tiene su propia infraestructura aislada en AWS.
 
-| Entorno | Stack | Stage | Branch | Descripción |
-|---------|-------|-------|--------|-------------|
-| `dev` | N/A | N/A | `dev` | Desarrollo local |
-| `pre` | `ig-api-pre` | `pre` | `pre` | Preproducción (AWS) |
-| `int` | `ig-api-int` | `int` | `int` | Integración (AWS) |
-| `pro` | `ig-api-pro` | `pro` | `pro` | Producción (AWS) |
+### Tabla de Entornos
+
+| Entorno | Stack CDK | Stage | Branch | Recursos AWS | Descripción |
+|---------|-----------|-------|--------|--------------|-------------|
+| `dev` | N/A | N/A | `dev` | ❌ Ninguno | Desarrollo local (sin AWS) |
+| `pre` | `ig-api-pre` | `pre` | `pre` | ✅ Lambda + API Gateway + DynamoDB | Preproducción |
+| `int` | `ig-api-int` | `int` | `int` | ✅ Lambda + API Gateway + DynamoDB | Integración |
+| `pro` | `ig-api-pro` | `pro` | `pro` | ✅ Lambda + API Gateway + DynamoDB | Producción |
+
+### Recursos por Entorno
+
+Cada entorno cloud (`pre`, `int`, `pro`) tiene:
+
+| Recurso | Descripción | Configuración |
+|---------|-------------|---------------|
+| **Lambda Function** | `ig-api-{env}` | Node.js 22, ARM64, 256MB |
+| **API Gateway** | REST API (Regional) | eu-west-1 |
+| **DynamoDB Table** | `ig-posts-{env}` | PAY_PER_REQUEST |
+| **CloudWatch Dashboard** | Monitoreo | Métricas básicas |
+
+### Variable `IG_ENV`
+
+La variable `IG_ENV` determina en qué entorno se ejecuta la aplicación:
+
+```bash
+# Se obtiene automáticamente del nombre de la branch
+git checkout pre  → IG_ENV=pre
+git checkout int  → IG_ENV=int
+git checkout pro  → IG_ENV=pro
+```
+
+**En desarrollo local** (branch `dev`), `IG_ENV` no se establece, por lo que:
+- Se usa DynamoDB Local (`http://localhost:8000`)
+- No se conecta a AWS
+- Se usa configuración de `.env`
 
 ### Desplegar a un entorno específico
 
@@ -378,7 +583,22 @@ IG_ENV=pro pnpm cdk deploy
 IG_ENV=int pnpm cdk deploy
 ```
 
-Cada entorno tiene su propia tabla DynamoDB, Lambda, API Gateway y CloudWatch Dashboard.
+### Flujo de Despliegue
+
+```
+Push a branch "pre"
+       ↓
+GitHub Actions se activa
+       ↓
+Lee secrets del environment "pre"
+       ↓
+Ejecuta: lint → test → CDK deploy
+       ↓
+Despliega stack "ig-api-pre" en AWS
+       ↓
+API disponible en:
+https://xxxxx.execute-api.eu-west-1.amazonaws.com/prod/
+```
 
 ### Flujo de trabajo con branches
 
@@ -386,23 +606,33 @@ Cada entorno tiene su propia tabla DynamoDB, Lambda, API Gateway y CloudWatch Da
 # Desarrollo local
 git checkout dev
 # ... hacer cambios ...
-git push origin dev
+git push origin dev  # → NO despliega a AWS
 
 # Desplegar a pre
 git checkout pre
 git merge dev
-git push origin pre  # → deploy automático
+git push origin pre  # → deploy automático a pre
 
 # Desplegar a int
 git checkout int
 git merge pre
-git push origin int  # → deploy automático
+git push origin int  # → deploy automático a int
 
 # Desplegar a pro (con approval)
 git checkout pro
 git merge int
 git push origin pro  # → deploy con approval manual
 ```
+
+### Diferencias entre entornos
+
+| Característica | `dev` | `pre` | `int` | `pro` |
+|----------------|-------|-------|-------|-------|
+| **AWS** | ❌ No | ✅ Sí | ✅ Sí | ✅ Sí |
+| **DynamoDB** | Local (8000) | AWS | AWS | AWS |
+| **Secrets** | `.env` file | GitHub Env | GitHub Env | GitHub Env |
+| **Approval** | N/A | No | No | ✅ Sí |
+| **Uso** | Desarrollo | Testing | Integración | Producción |
 
 ## Documentation
 

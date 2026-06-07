@@ -1,4 +1,4 @@
-import { Duration, Stack } from "aws-cdk-lib";
+import { Duration, Stack, Tags } from "aws-cdk-lib";
 import { Alarm, Dashboard, GraphWidget } from "aws-cdk-lib/aws-cloudwatch";
 import {
   LambdaRestApi,
@@ -143,6 +143,25 @@ export class IgApiStack extends Stack {
         width: 12,
       }),
     );
+
+    // ── Stack-level tags (propagate to ALL child resources) ──
+    Tags.of(this).add("Stack", `ig-api-${environment}`);
+    Tags.of(this).add("Environment", environment);
+    Tags.of(this).add("Project", "IG-API");
+    Tags.of(this).add("ManagedBy", "CDK");
+
+    // ── Resource-specific tags ──
+    Tags.of(table).add("Resource", "DynamoDB");
+    Tags.of(table).add("Name", `${tableName}`);
+
+    Tags.of(lambda).add("Resource", "Lambda");
+    Tags.of(lambda).add("Name", `${id}-api`);
+
+    Tags.of(api).add("Resource", "APIGateway");
+    Tags.of(api).add("Name", `${id}-api`);
+
+    Tags.of(dashboard).add("Resource", "CloudWatch");
+    Tags.of(dashboard).add("Name", `${id}-monitoring`);
 
     this.apiUrl = api.url;
   }
