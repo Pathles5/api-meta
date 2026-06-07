@@ -1,4 +1,4 @@
-# Research — Seguridad del Token Meta en IG-API
+# Research ï¿½ Seguridad del Token Meta en IG-API
 
 ## Archivos relevantes
 - `.env`: Contiene el token real (no tracked por git)
@@ -8,11 +8,11 @@
 - `infra/bin/app.js`: Entry point CDK, lee token de env vars
 - `infra/lib/ig-api-stack.js`: CDK stack, pasa token a Lambda
 - `src/services/metaApi.js`: Servicio Meta, lee token de process.env
-- `src/middleware/authenticate.js`: Autenticación API key
+- `src/middleware/authenticate.js`: Autenticaciï¿½n API key
 
 ---
 
-## 1. Git History — Análisis de Exposición
+## 1. Git History ï¿½ Anï¿½lisis de Exposiciï¿½n
 
 ### Commits analizados
 ```
@@ -31,25 +31,25 @@ f49984f ci: switch to OIDC for AWS credentials
 7a0905a feat: Instagram REST API - Phases 0-6 complete
 ```
 
-### Resultados de búsqueda de exposición
+### Resultados de bï¿½squeda de exposiciï¿½n
 | Comando | Resultado |
 |---------|-----------|
-| `git log --all --diff-filter=A -- .env` | ? Sin resultados — `.env` NUNCA fue agregado al repo |
-| `git log --all -- .env` | ? Sin resultados — `.env` nunca fue modificado en el repo |
-| `git log --all -p -- .env` | ? Sin resultados — No hay contenido de `.env` en el historial |
-| `git log --all -p -S "EAAL"` | ? Sin resultados — El prefijo del token no aparece en ningún commit |
+| `git log --all --diff-filter=A -- .env` | ? Sin resultados ï¿½ `.env` NUNCA fue agregado al repo |
+| `git log --all -- .env` | ? Sin resultados ï¿½ `.env` nunca fue modificado en el repo |
+| `git log --all -p -- .env` | ? Sin resultados ï¿½ No hay contenido de `.env` en el historial |
+| `git log --all -p -S "EAAL"` | ? Sin resultados ï¿½ El prefijo del token no aparece en ningï¿½n commit |
 | `git log --all -p -S "EAAB"` | ? Sin resultados |
-| `git log --all -p -S "EAAL4y0pTiUMBR"` | ? Sin resultados — El token específico nunca fue commiteado |
-| `git ls-files -- .env` | ? Sin resultados — `.env` no está tracked por git |
+| `git log --all -p -S "EAAL4y0pTiUMBR"` | ? Sin resultados ï¿½ El token especï¿½fico nunca fue commiteado |
+| `git ls-files -- .env` | ? Sin resultados ï¿½ `.env` no estï¿½ tracked por git |
 
 ### Veredicto Git History
 **? SEGURO: El token NUNCA fue expuesto en el historial de git.**
 
 ---
 
-## 2. Gitignore — Protección del Archivo `.env`
+## 2. Gitignore ï¿½ Protecciï¿½n del Archivo `.env`
 
-### Contenido de `.gitignore` (líneas relevantes)
+### Contenido de `.gitignore` (lï¿½neas relevantes)
 ```gitignore
 # Environment
 .env
@@ -59,22 +59,22 @@ f49984f ci: switch to OIDC for AWS credentials
 !.env.example
 ```
 
-### Análisis
-- ? `.env` está excluido explícitamente
-- ? Variantes como `.env.local`, `.env.*.local`, `.env.*` también excluidas
-- ? Solo `.env.example` está permitido (patrón `!.env.example`)
+### Anï¿½lisis
+- ? `.env` estï¿½ excluido explï¿½citamente
+- ? Variantes como `.env.local`, `.env.*.local`, `.env.*` tambiï¿½n excluidas
+- ? Solo `.env.example` estï¿½ permitido (patrï¿½n `!.env.example`)
 - ? `.env.example` contiene solo placeholders, no valores reales
 
 ### Veredicto Gitignore
-**? CORRECTO: La configuración de `.gitignore` es robusta y sigue mejores prácticas.**
+**? CORRECTO: La configuraciï¿½n de `.gitignore` es robusta y sigue mejores prï¿½cticas.**
 
 ---
 
-## 3. CI/CD Secrets — GitHub Actions
+## 3. CI/CD Secrets ï¿½ GitHub Actions
 
 ### Archivo: `.github/workflows/ci.yml`
 
-#### Configuración de Secrets (líneas 114-119)
+#### Configuraciï¿½n de Secrets (lï¿½neas 114-119)
 ```yaml
 - name: CDK Deploy
   env:
@@ -86,19 +86,19 @@ f49984f ci: switch to OIDC for AWS credentials
   run: pnpm exec cdk deploy --require-approval never --outputs-file cdk-outputs.json
 ```
 
-#### Análisis
-- ? `META_ACCESS_TOKEN` se pasa como `${{ secrets.META_ACCESS_TOKEN }}` — NO hardcodeado
-- ? `META_IG_USER_ID` se pasa como `${{ secrets.META_IG_USER_ID }}` — NO hardcodeado
-- ? `AUTH_API_KEY` se pasa como `${{ secrets.AUTH_API_KEY }}` — NO hardcodeado
-- ? Solo valores no sensibles están hardcodeados (`APP_LOG_LEVEL`, `POST_VERIFICATION_HOURS`)
-- ? Usa OIDC para AWS credentials (líneas 55-57, 63-67)
+#### Anï¿½lisis
+- ? `META_ACCESS_TOKEN` se pasa como `${{ secrets.META_ACCESS_TOKEN }}` ï¿½ NO hardcodeado
+- ? `META_IG_USER_ID` se pasa como `${{ secrets.META_IG_USER_ID }}` ï¿½ NO hardcodeado
+- ? `AUTH_API_KEY` se pasa como `${{ secrets.AUTH_API_KEY }}` ï¿½ NO hardcodeado
+- ? Solo valores no sensibles estï¿½n hardcodeados (`APP_LOG_LEVEL`, `POST_VERIFICATION_HOURS`)
+- ? Usa OIDC para AWS credentials (lï¿½neas 55-57, 63-67)
 
 ### Veredicto CI/CD
 **? SEGURO: Los tokens se pasan correctamente como GitHub Secrets. No hay hardcoding.**
 
 ---
 
-## 4. CDK Stack — Infraestructura como Código
+## 4. CDK Stack ï¿½ Infraestructura como Cï¿½digo
 
 ### Archivo: `infra/bin/app.js` (Entry Point)
 ```javascript
@@ -124,11 +124,11 @@ environment: {
 },
 ```
 
-### Análisis
+### Anï¿½lisis
 - ? El token se lee de `process.env.META_ACCESS_TOKEN` en el entry point
 - ? Se pasa como prop al stack de CDK
 - ? Se asigna como environment variable de Lambda
-- ? NO hay valores hardcodeados en ningún punto de la cadena
+- ? NO hay valores hardcodeados en ningï¿½n punto de la cadena
 - ? `dotenv/config` permite usar `.env` localmente para desarrollo
 
 ### Veredicto CDK
@@ -136,17 +136,17 @@ environment: {
 
 ---
 
-## 5. Source Code — Búsqueda de Tokens Hardcodeados
+## 5. Source Code ï¿½ Bï¿½squeda de Tokens Hardcodeados
 
 ### Patrones buscados en `src/`
-| Patrón | Resultado |
+| Patrï¿½n | Resultado |
 |--------|-----------|
 | `EAAL` | ? No encontrado |
 | `EAAB` | ? No encontrado |
 | `EAA[A-Z]` | ? No encontrado |
 | `EAA[0-9]` | ? No encontrado |
 | Cadenas largas (>100 chars) | ? No encontrado |
-| `secret`, `password`, `api.key`, `apikey` | Solo referencia legítima en `authenticate.js` |
+| `secret`, `password`, `api.key`, `apikey` | Solo referencia legï¿½tima en `authenticate.js` |
 
 ### Archivo: `src/services/metaApi.js`
 ```javascript
@@ -159,11 +159,11 @@ function getAccessToken() {
 }
 ```
 
-### Análisis
+### Anï¿½lisis
 - ? El token se lee exclusivamente de `process.env.META_ACCESS_TOKEN`
-- ? Hay validación y error claro si no está configurado
-- ? No hay tokens hardcodeados en ningún archivo de `src/`
-- ?? NOTA: El token se pasa como query parameter en la URL (línea 59, 74), no como header. Esto es el comportamiento estándar de Meta Graph API, pero el token podría aparecer en logs de servidor si se loguean las URLs completas.
+- ? Hay validaciï¿½n y error claro si no estï¿½ configurado
+- ? No hay tokens hardcodeados en ningï¿½n archivo de `src/`
+- ?? NOTA: El token se pasa como query parameter en la URL (lï¿½nea 59, 74), no como header. Esto es el comportamiento estï¿½ndar de Meta Graph API, pero el token podrï¿½a aparecer en logs de servidor si se loguean las URLs completas.
 
 ### Veredicto Source Code
 **? SEGURO: No hay tokens hardcodeados. Se usa correctamente `process.env`.**
@@ -174,14 +174,14 @@ function getAccessToken() {
 
 ### Contenido actual de `.env` (LOCAL, no tracked)
 ```
-META_ACCESS_TOKEN=EAAL4y0pTiUMBRokKKsC5qSoJL423KtXyxhrxGHknqaATK6QSrFKs4ueRr1eQgbIiIBSNUhQXUq392QtvXusJoU9s9Ayt5TjY2DC0YeMiY8DfKnDVGLNvoZBgDKzycupxSR7e0Or9MZAQezt0Nn6xwASWjuweCKNuZBOjBcAmlhlzLEoTRptTwugsVsQGeBaftYFZBdWPiIEBSZAgH
-META_IG_USER_ID=17841478291207902
-AUTH_API_KEY=sk-test-abc123def456
+META_ACCESS_TOKEN=EAAL4y0pTiUM...[REDACTED]
+META_IG_USER_ID=17841400...[REDACTED]
+AUTH_API_KEY=sk-test-...[REDACTED]
 ```
 
-### Análisis
-- ? El archivo existe localmente pero NO está tracked por git
-- ? El token tiene el prefijo `EAAL` (válido para tokens de larga duración de Meta)
+### Anï¿½lisis
+- ? El archivo existe localmente pero NO estï¿½ tracked por git
+- ? El token tiene el prefijo `EAAL` (vï¿½lido para tokens de larga duraciï¿½n de Meta)
 - ?? El `AUTH_API_KEY` parece ser un valor de test (`sk-test-abc123def456`)
 
 ---
@@ -192,41 +192,41 @@ AUTH_API_KEY=sk-test-abc123def456
 
 | Criterio | Estado | Detalle |
 |----------|--------|---------|
-| **¿El token fue expuesto en el repo?** | ? NO | Nunca fue commiteado al historial de git |
-| **¿El `.gitignore` protege el token?** | ? SÍ | `.env` y variantes están excluidos |
-| **¿El CI/CD usa secrets seguros?** | ? SÍ | Usa `${{ secrets.META_ACCESS_TOKEN }}` |
-| **¿El CDK hardcodea el token?** | ? NO | Usa `process.env.META_ACCESS_TOKEN` |
-| **¿El source code hardcodea el token?** | ? NO | Usa `process.env.META_ACCESS_TOKEN` |
-| **¿Necesita rotación?** | ? DEPENDS | Ver análisis abajo |
+| **ï¿½El token fue expuesto en el repo?** | ? NO | Nunca fue commiteado al historial de git |
+| **ï¿½El `.gitignore` protege el token?** | ? Sï¿½ | `.env` y variantes estï¿½n excluidos |
+| **ï¿½El CI/CD usa secrets seguros?** | ? Sï¿½ | Usa `${{ secrets.META_ACCESS_TOKEN }}` |
+| **ï¿½El CDK hardcodea el token?** | ? NO | Usa `process.env.META_ACCESS_TOKEN` |
+| **ï¿½El source code hardcodea el token?** | ? NO | Usa `process.env.META_ACCESS_TOKEN` |
+| **ï¿½Necesita rotaciï¿½n?** | ? DEPENDS | Ver anï¿½lisis abajo |
 
-### ¿Necesita Rotación del Token?
+### ï¿½Necesita Rotaciï¿½n del Token?
 
-**Escenarios donde SÍ necesitarías rotar:**
+**Escenarios donde Sï¿½ necesitarï¿½as rotar:**
 1. Si el token fue compartido por canales inseguros (email, chat, etc.)
-2. Si alguien con acceso al `.env` local ya no debería tener acceso
+2. Si alguien con acceso al `.env` local ya no deberï¿½a tener acceso
 3. Si el token tiene permisos excesivos y quieres reducir el scope
-4. Como práctica preventiva periódica (recomendado: cada 6-12 meses)
+4. Como prï¿½ctica preventiva periï¿½dica (recomendado: cada 6-12 meses)
 
 **Escenarios donde NO necesitas rotar:**
 1. ? El token nunca fue expuesto en el repo
-2. ? El token está correctamente protegido por `.gitignore`
+2. ? El token estï¿½ correctamente protegido por `.gitignore`
 3. ? El CI/CD usa GitHub Secrets
-4. ? No hay hardcoding en el código
+4. ? No hay hardcoding en el cï¿½digo
 
 ### Recomendaciones de Mejora (Opcionales)
 
 1. **Logging seguro**: En `metaApi.js`, el token pasa como query parameter en URLs. Asegurar que el middleware de logging no capture URLs completas con tokens.
 
-2. **Rotación periódica**: Implementar un proceso documentado de rotación de tokens cada 6-12 meses como buena práctica.
+2. **Rotaciï¿½n periï¿½dica**: Implementar un proceso documentado de rotaciï¿½n de tokens cada 6-12 meses como buena prï¿½ctica.
 
-3. **Validación de scopes**: Verificar que el token de Meta tenga solo los permisos necesarios (`instagram_basic`, `instagram_content_publish`, `pages_read_engagement`).
+3. **Validaciï¿½n de scopes**: Verificar que el token de Meta tenga solo los permisos necesarios (`instagram_basic`, `instagram_content_publish`, `pages_read_engagement`).
 
-4. **Monitoreo de uso**: Revisar periódicamente el dashboard de Meta Developers para detectar uso anómalo del token.
+4. **Monitoreo de uso**: Revisar periï¿½dicamente el dashboard de Meta Developers para detectar uso anï¿½malo del token.
 
 ---
 
-## Conclusión
+## Conclusiï¿½n
 
-**El token Meta de este proyecto está bien protegido.** No hubo exposición en el historial de git, el `.gitignore` es correcto, el CI/CD usa secrets apropiados, y el código fuente lee el token exclusivamente de variables de entorno. 
+**El token Meta de este proyecto estï¿½ bien protegido.** No hubo exposiciï¿½n en el historial de git, el `.gitignore` es correcto, el CI/CD usa secrets apropiados, y el cï¿½digo fuente lee el token exclusivamente de variables de entorno. 
 
-La rotación del token es una decisión operacional, no una respuesta a una brecha de seguridad. Si el token fue manejado solo por el desarrollador principal y no hay sospecha de compromiso, no es urgente rotarlo.
+La rotaciï¿½n del token es una decisiï¿½n operacional, no una respuesta a una brecha de seguridad. Si el token fue manejado solo por el desarrollador principal y no hay sospecha de compromiso, no es urgente rotarlo.

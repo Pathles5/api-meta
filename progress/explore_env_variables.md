@@ -178,8 +178,8 @@ GitHub Secrets --> CI/CD Job env vars --> infra/bin/app.js (lee env) --> infra/l
 
 ```
 META_ACCESS_TOKEN=EAAL4y0pTiUM...
-META_IG_USER_ID=17841478291207902
-AUTH_API_KEY=sk-test-abc123def456
+META_IG_USER_ID=17841400...[REDACTED]
+AUTH_API_KEY=sk-test-...[REDACTED]
 APP_PORT=3000
 NODE_ENV=development
 APP_RATE_LIMIT_WINDOW_MS=60000

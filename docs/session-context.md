@@ -97,7 +97,7 @@ Token rotado y verificado.
 - **Lint:** Limpio
 - **Bundle size:** 11.5 MB (de 300+ MB)
 - **Región AWS:** eu-west-1
-- **Cuenta AWS:** 159177056493
+- **Cuenta AWS:** 123456789012
 - **Stack:** ig-api
 - **Remote:** https://github.com/Pathles5/api-meta.git
 - **Último deploy:** ✅ Exitoso (run 27051208345)

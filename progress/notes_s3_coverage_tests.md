@@ -126,7 +126,7 @@ Al ser un **proyecto educativo**, probablemente **no necesitaremos** los entorno
 - [ ] Ajustar lógica de procesamiento según eventos reales recibidos
 
 ### URLs de webhook para Meta:
-- **pre**: https://0kp591p5k7.execute-api.eu-west-1.amazonaws.com/pre/webhooks
+- **pre**: https://xxxxx.execute-api.eu-west-1.amazonaws.com/pre/webhooks
 - **int**: (pendiente de crear)
 - **pro**: (pendiente de crear)
 

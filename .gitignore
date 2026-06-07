@@ -49,3 +49,6 @@ tools/dynamodb-local/
 *.db
 *-metadata.json
 nul
+
+# Progress files may contain sensitive operational data
+progress/

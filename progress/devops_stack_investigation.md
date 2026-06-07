@@ -78,10 +78,10 @@ deployOptions: {
 | Propiedad | Valor |
 |-----------|-------|
 | Stack Name | `ig-api` |
-| Stack ARN | `arn:aws:cloudformation:eu-west-1:159177056493:stack/ig-api/...` |
+| Stack ARN | `arn:aws:cloudformation:eu-west-1:123456789012:stack/ig-api/...` |
 | Tabla DynamoDB | `ig-posts` |
 | API Gateway Stage | `prod` |
-| API URL | `https://p3uon57t46.execute-api.eu-west-1.amazonaws.com/prod/` |
+| API URL | `https://xxxxx.execute-api.eu-west-1.amazonaws.com/prod/` |
 | Origen | Desplegado desde rama `main` (código antiguo) |
 
 ### Stack `ig-api-pre` (nuevo) - NO EXISTE ❌
