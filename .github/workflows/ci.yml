@@ -45,6 +45,9 @@ jobs:
       - name: Run tests
         run: pnpm test
 
+      - name: Run tests with coverage
+        run: pnpm test:coverage:threshold
+
       - name: Audit dependencies
         run: pnpm audit --audit-level=critical
 

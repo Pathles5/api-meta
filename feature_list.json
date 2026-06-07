@@ -1,7 +1,7 @@
 {
   "project": "IG-API",
   "version": "1.0",
-  "last_updated": "2026-06-06",
+  "last_updated": "2026-06-07",
   
   "features": [
     {
@@ -71,9 +71,10 @@
       "id": "FEAT-008",
       "title": "Webhook Endpoint",
       "description": "POST /webhooks endpoint to receive Instagram events",
-      "status": "in_progress",
+      "status": "completed",
+      "completed_date": "2026-06-07",
       "phase": 7,
-      "assigned_agent": "none",
+      "assigned_agent": "implementer",
       "dependencies": ["FEAT-007"],
       "priority": "high",
       "estimated_effort": "medium"
@@ -82,9 +83,10 @@
       "id": "FEAT-009",
       "title": "Webhook Signature Validation",
       "description": "Validate incoming webhook signatures using app secret",
-      "status": "in_progress",
+      "status": "completed",
+      "completed_date": "2026-06-07",
       "phase": 7,
-      "assigned_agent": "none",
+      "assigned_agent": "implementer",
       "dependencies": ["FEAT-008"],
       "priority": "high",
       "estimated_effort": "small"
@@ -93,9 +95,10 @@
       "id": "FEAT-010",
       "title": "Webhook Subscription Verification",
       "description": "Handle challenge-response for webhook subscription",
-      "status": "in_progress",
+      "status": "completed",
+      "completed_date": "2026-06-07",
       "phase": 7,
-      "assigned_agent": "none",
+      "assigned_agent": "implementer",
       "dependencies": ["FEAT-008"],
       "priority": "high",
       "estimated_effort": "small"
@@ -104,9 +107,10 @@
       "id": "FEAT-011",
       "title": "Process Incoming Webhook Events",
       "description": "Handle publication and notification events from Instagram",
-      "status": "in_progress",
+      "status": "completed",
+      "completed_date": "2026-06-07",
       "phase": 7,
-      "assigned_agent": "none",
+      "assigned_agent": "implementer",
       "dependencies": ["FEAT-009", "FEAT-010"],
       "priority": "medium",
       "estimated_effort": "large"
@@ -166,6 +170,28 @@
       "dependencies": ["FEAT-011"],
       "priority": "low",
       "estimated_effort": "large"
+    },
+    {
+      "id": "FEAT-016",
+      "title": "Test Coverage Configuration",
+      "description": "Configure test coverage thresholds and reporting",
+      "status": "completed",
+      "phase": 8,
+      "assigned_agent": "none",
+      "dependencies": ["FEAT-011"],
+      "priority": "medium",
+      "estimated_effort": "small"
+    },
+    {
+      "id": "FEAT-017",
+      "title": "Image Storage Strategy",
+      "description": "Decide between S3 vs DynamoDB for image storage",
+      "status": "pending",
+      "phase": 8,
+      "assigned_agent": "none",
+      "dependencies": ["FEAT-011"],
+      "priority": "medium",
+      "estimated_effort": "medium"
     }
   ],
   
@@ -179,13 +205,13 @@
     "4": { "name": "Data Persistence", "status": "completed" },
     "5": { "name": "Post Management", "status": "completed" },
     "6": { "name": "Infrastructure & Deployment", "status": "completed" },
-    "7": { "name": "Webhooks", "status": "ready" },
+    "7": { "name": "Webhooks", "status": "completed" },
     "8": { "name": "Production Readiness", "status": "pending" }
   },
   
   "next_actions": [
-    "FEAT-008: Webhook Endpoint (Phase 7)",
-    "FEAT-009: Webhook Signature Validation (Phase 7)",
-    "FEAT-010: Webhook Subscription Verification (Phase 7)"
+    "FEAT-012: CloudWatch Monitoring & Alerts (Phase 8)",
+    "Investigar cobertura de tests",
+    "Decidir estrategia de almacenamiento de imágenes (S3 vs DynamoDB)"
   ]
 }

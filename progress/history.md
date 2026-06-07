@@ -1,5 +1,14 @@
 # Historial de Sesiones
 
+## 2026-06-07: FEAT-016 — Test Coverage Configuration
+
+### Cambios realizados
+- `package.json`: Anadidos scripts `test:coverage` y `test:coverage:threshold`
+- `.github/workflows/ci.yml`: Anadido paso "Run tests with coverage" con thresholds del 80%
+- Sin dependencias externas (Node.js 22 nativo `--experimental-test-coverage`)
+- 93 tests pasando, cobertura: 94.03% lines, 89.37% branches, 96.36% functions
+- Resumen completo: `progress/feat_016_coverage_config.md`
+
 ## 2026-06-07: Sesion de Correccion de Documentacion y Migraciones
 
 ### Cambios realizados
