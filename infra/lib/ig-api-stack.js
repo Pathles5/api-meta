@@ -41,19 +41,19 @@ export class IgApiStack extends Stack {
       sortKey: { name: "id", type: AttributeType.STRING },
     });
 
-    // GSI: by-mediaType — Filtrar posts por tipo de media (IMAGE, VIDEO, CAROUSEL_ALBUM)
-    table.addGlobalSecondaryIndex({
-      indexName: "by-mediaType",
-      partitionKey: { name: "mediaType", type: AttributeType.STRING },
-      sortKey: { name: "timestamp", type: AttributeType.STRING },
-    });
+    // GSI: by-mediaType — deferred: DynamoDB allows only 1 GSI change per update
+    // table.addGlobalSecondaryIndex({
+    //   indexName: "by-mediaType",
+    //   partitionKey: { name: "mediaType", type: AttributeType.STRING },
+    //   sortKey: { name: "timestamp", type: AttributeType.STRING },
+    // });
 
-    // GSI: by-price — Buscar posts con precio extraído (FEAT-026)
-    table.addGlobalSecondaryIndex({
-      indexName: "by-price",
-      partitionKey: { name: "price", type: AttributeType.NUMBER },
-      sortKey: { name: "timestamp", type: AttributeType.STRING },
-    });
+    // GSI: by-price — deferred: DynamoDB allows only 1 GSI change per update
+    // table.addGlobalSecondaryIndex({
+    //   indexName: "by-price",
+    //   partitionKey: { name: "price", type: AttributeType.NUMBER },
+    //   sortKey: { name: "timestamp", type: AttributeType.STRING },
+    // });
 
     // ── S3 Bucket for Instagram media storage ──
     // Stores images/videos downloaded from Instagram.
