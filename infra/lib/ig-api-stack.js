@@ -12,20 +12,62 @@ import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Topic } from "aws-cdk-lib/aws-sns";
 import { EmailSubscription } from "aws-cdk-lib/aws-sns-subscriptions";
+import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { Rule, Schedule } from "aws-cdk-lib/aws-events";
+import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
+import { Bucket } from "aws-cdk-lib/aws-s3";
 import { resolve } from "path";
 
 export class IgApiStack extends Stack {
   constructor(scope, id, props = {}) {
     super(scope, id, props);
 
-    const { tableName, environment, metaAccessToken, igUserId, authApiKey, verificationHours, logLevel, metaAppSecret, metaVerifyToken, alarmEmail } =
+    const { tableName, environment, igUserId, authApiKey, verificationHours, logLevel, metaAppSecret, metaVerifyToken, alarmEmail } =
       props;
 
     const table = new Table(this, `${id}-posts-table`, {
       tableName,
       billingMode: BillingMode.PAY_PER_REQUEST,
       partitionKey: { name: "id", type: AttributeType.STRING },
+      sortKey: { name: "timestamp", type: AttributeType.STRING },
       timeToLiveAttribute: "expiresAt",
+    });
+
+    // ── Global Secondary Indexes (GSIs) ──
+    // GSI: by-timestamp — Listar posts por fecha (reemplaza Scan ineficiente)
+    table.addGlobalSecondaryIndex({
+      indexName: "by-timestamp",
+      partitionKey: { name: "timestamp", type: AttributeType.STRING },
+      sortKey: { name: "id", type: AttributeType.STRING },
+    });
+
+    // GSI: by-mediaType — Filtrar posts por tipo de media (IMAGE, VIDEO, CAROUSEL_ALBUM)
+    table.addGlobalSecondaryIndex({
+      indexName: "by-mediaType",
+      partitionKey: { name: "mediaType", type: AttributeType.STRING },
+      sortKey: { name: "timestamp", type: AttributeType.STRING },
+    });
+
+    // GSI: by-price — Buscar posts con precio extraído (FEAT-026)
+    table.addGlobalSecondaryIndex({
+      indexName: "by-price",
+      partitionKey: { name: "price", type: AttributeType.NUMBER },
+      sortKey: { name: "timestamp", type: AttributeType.STRING },
+    });
+
+    // ── S3 Bucket for Instagram media storage ──
+    // Stores images/videos downloaded from Instagram.
+    // Cost: $0 within Free Tier (5 GB standard storage).
+    const mediaBucket = new Bucket(this, `${id}-media-bucket`, {
+      bucketName: `${id}-media-${environment}`,
+      removalPolicy: RemovalPolicy.RETAIN,
+      // Lifecycle: auto-delete objects after 90 days (aligned with DynamoDB TTL)
+      lifecycleRules: [
+        {
+          expiration: Duration.days(90),
+          enabled: true,
+        },
+      ],
     });
 
     // ── Lambda LogGroup con retención de 30 días ──
@@ -55,18 +97,29 @@ export class IgApiStack extends Stack {
       timeout: Duration.seconds(15),
       environment: {
         DYNAMODB_TABLE_NAME: tableName,
-        META_ACCESS_TOKEN: metaAccessToken,
+        S3_BUCKET_NAME: mediaBucket.bucketName,
         META_IG_USER_ID: igUserId,
         AUTH_API_KEY: authApiKey,
         POST_VERIFICATION_HOURS: verificationHours,
         APP_LOG_LEVEL: logLevel,
         META_APP_SECRET: metaAppSecret,
         META_VERIFY_TOKEN: metaVerifyToken,
+        IG_ENV: environment,
         NODE_ENV: "production",
       },
     });
 
     table.grantReadWriteData(lambda);
+    mediaBucket.grantReadWrite(lambda);
+
+    // ── SSM Parameter Store: lectura del token de Meta ──
+    lambda.addToRolePolicy(
+      new PolicyStatement({
+        effect: Effect.ALLOW,
+        actions: ["ssm:GetParameter"],
+        resources: [`arn:aws:ssm:${this.region}:${this.account}:parameter/ig-api/${environment}/*`],
+      })
+    );
 
     // ── SNS Topic for alarm notifications ──
     const alarmTopic = new Topic(this, `${id}-alarm-topic`, {
@@ -228,6 +281,63 @@ export class IgApiStack extends Stack {
       }),
     );
 
+    // ── Token Refresh Lambda (cada 30 días) ──
+    const tokenRefreshLogGroup = new LogGroup(this, `${id}-token-refresh-logs`, {
+      logGroupName: `/aws/lambda/${id}-token-refresh`,
+      retention: RetentionDays.ONE_MONTH,
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+
+    const tokenRefreshLambda = new NodejsFunction(this, `${id}-token-refresh`, {
+      functionName: `${id}-token-refresh`,
+      runtime: Runtime.NODEJS_22_X,
+      architecture: Architecture.ARM_64,
+      handler: "handler",
+      entry: resolve(import.meta.dirname, "../../src/handlers/tokenRefreshHandler.js"),
+      bundling: {
+        minify: true,
+        sourceMap: false,
+        target: "node22",
+        externalModules: ["@aws-sdk/*"],
+      },
+      logGroup: tokenRefreshLogGroup,
+      memorySize: 128,
+      timeout: Duration.seconds(30),
+      environment: {
+        IG_ENV: environment,
+        APP_LOG_LEVEL: logLevel,
+        NODE_ENV: "production",
+      },
+    });
+
+    // IAM: lectura y escritura en SSM para el token refresh
+    tokenRefreshLambda.addToRolePolicy(
+      new PolicyStatement({
+        effect: Effect.ALLOW,
+        actions: ["ssm:GetParameter", "ssm:PutParameter"],
+        resources: [`arn:aws:ssm:${this.region}:${this.account}:parameter/ig-api/${environment}/*`],
+      })
+    );
+
+    // EventBridge Rule: ejecutar cada 30 días
+    const tokenRefreshRule = new Rule(this, `${id}-token-refresh-schedule`, {
+      ruleName: `${id}-token-refresh-schedule`,
+      schedule: Schedule.rate(Duration.days(30)),
+      description: "Refresh Meta access token every 30 days",
+    });
+
+    tokenRefreshRule.addTarget(new LambdaFunction(tokenRefreshLambda));
+
+    // Alarma si la Lambda de refresh falla
+    const tokenRefreshErrorsAlarm = new Alarm(this, `${id}-token-refresh-errors`, {
+      metric: tokenRefreshLambda.metricErrors({ period: Duration.hours(1) }),
+      threshold: 1,
+      evaluationPeriods: 1,
+      alarmDescription: "Token refresh Lambda failed - token may expire soon",
+    });
+    tokenRefreshErrorsAlarm.addAlarmAction(snsAction);
+    tokenRefreshErrorsAlarm.addOkAction(snsAction);
+
     // ── Stack-level tags (propagate to ALL child resources) ──
     Tags.of(this).add("Stack", `ig-api-${environment}`);
     Tags.of(this).add("Environment", environment);
@@ -237,6 +347,9 @@ export class IgApiStack extends Stack {
     // ── Resource-specific tags ──
     Tags.of(table).add("Resource", "DynamoDB");
     Tags.of(table).add("Name", `${tableName}`);
+
+    Tags.of(mediaBucket).add("Resource", "S3");
+    Tags.of(mediaBucket).add("Name", `${id}-media-${environment}`);
 
     Tags.of(lambda).add("Resource", "Lambda");
     Tags.of(lambda).add("Name", `${id}-api`);
@@ -249,6 +362,12 @@ export class IgApiStack extends Stack {
 
     Tags.of(alarmTopic).add("Resource", "SNS");
     Tags.of(alarmTopic).add("Name", `${id}-alarm-topic`);
+
+    Tags.of(tokenRefreshLambda).add("Resource", "Lambda");
+    Tags.of(tokenRefreshLambda).add("Name", `${id}-token-refresh`);
+
+    Tags.of(tokenRefreshRule).add("Resource", "EventBridge");
+    Tags.of(tokenRefreshRule).add("Name", `${id}-token-refresh-schedule`);
 
     this.apiUrl = api.url;
   }

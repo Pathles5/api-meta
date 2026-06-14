@@ -1,14 +1,7 @@
 import { createError } from "../middleware/errorHandler.js";
+import { getAccessToken as fetchTokenFromSSM } from "./tokenService.js";
 
 const META_API_BASE = "https://graph.facebook.com/v24.0";
-
-function getAccessToken() {
-  const token = process.env.META_ACCESS_TOKEN;
-  if (!token) {
-    throw createError(500, "META_ACCESS_TOKEN not configured");
-  }
-  return token;
-}
 
 function getInstagramUserId() {
   const igUserId = process.env.META_IG_USER_ID;
@@ -53,7 +46,7 @@ function normalizePost(data) {
 }
 
 async function fetchPosts(limit = 20) {
-  const accessToken = getAccessToken();
+  const accessToken = await fetchTokenFromSSM();
   const igUserId = getInstagramUserId();
 
   const url = `${META_API_BASE}/${encodeURIComponent(igUserId)}/media?fields=id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,like_count,comments_count&limit=${limit}&access_token=${accessToken}`;
@@ -70,7 +63,7 @@ async function fetchPosts(limit = 20) {
 }
 
 async function fetchPost(postId) {
-  const accessToken = getAccessToken();
+  const accessToken = await fetchTokenFromSSM();
   const url = `${META_API_BASE}/${encodeURIComponent(postId)}?fields=id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,like_count,comments_count&access_token=${accessToken}`;
 
   const response = await fetch(url);

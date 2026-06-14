@@ -1,8 +1,7 @@
 import {
   PutCommand,
-  GetCommand,
   DeleteCommand,
-  ScanCommand,
+  QueryCommand,
   UpdateCommand,
   BatchWriteCommand,
 } from "@aws-sdk/lib-dynamodb";
@@ -39,32 +38,64 @@ function createPostRepository(client, options = {}) {
   }
 
   async function getPost(id) {
+    // Query en la tabla principal usando solo el Partition Key (id)
+    // DynamoDB requiere ambos PK y SK para GetItem, pero solo tenemos id
     const result = await client.send(
-      new GetCommand({
+      new QueryCommand({
         TableName: tableName,
-        Key: { id },
+        KeyConditionExpression: "id = :id",
+        ExpressionAttributeValues: { ":id": id },
+        Limit: 1,
       }),
     );
 
-    return result.Item || null;
+    return result.Items?.[0] || null;
   }
 
-  async function listPosts(limit = 20) {
-    const result = await client.send(
-      new ScanCommand({
-        TableName: tableName,
-        Limit: limit,
-      }),
-    );
+  /**
+   * Lista posts desde DynamoDB ordenados por fecha (mas recientes primero).
+   * Soporta paginacion via cursor (base64 del LastEvaluatedKey).
+   * @param {number} [limit=20] - Cantidad maxima de posts a retornar (1-100).
+   * @param {string|null} [cursor=null] - Cursor de paginacion (base64 JSON del ExclusiveStartKey).
+   * @returns {Promise<{items: Array, nextCursor: string|null}>} Items y cursor para la siguiente pagina.
+   */
+  async function listPosts(limit = 20, cursor = null) {
+    const params = {
+      TableName: tableName,
+      IndexName: "by-timestamp",
+      KeyConditionExpression: "timestamp > :minTimestamp",
+      ExpressionAttributeValues: { ":minTimestamp": "1970-01-01T00:00:00.000Z" },
+      Limit: limit,
+      ScanIndexForward: false,
+    };
 
-    return result.Items || [];
+    if (cursor) {
+      try {
+        const decoded = JSON.parse(Buffer.from(cursor, "base64").toString("utf-8"));
+        params.ExclusiveStartKey = decoded;
+      } catch {
+        // Cursor invalido: ignorar y empezar desde el inicio
+      }
+    }
+
+    const result = await client.send(new QueryCommand(params));
+
+    const nextCursor = result.LastEvaluatedKey
+      ? Buffer.from(JSON.stringify(result.LastEvaluatedKey)).toString("base64")
+      : null;
+
+    return { items: result.Items || [], nextCursor };
   }
 
   async function deletePost(id) {
+    // Primero obtener el timestamp (Sort Key) del post
+    const post = await getPost(id);
+    if (!post) return;
+
     await client.send(
       new DeleteCommand({
         TableName: tableName,
-        Key: { id },
+        Key: { id, timestamp: post.timestamp },
       }),
     );
   }
@@ -103,12 +134,16 @@ function createPostRepository(client, options = {}) {
   }
 
   async function updateVerificationDate(id) {
+    // Primero obtener el timestamp (Sort Key) del post
+    const post = await getPost(id);
+    if (!post) return null;
+
     const now = new Date().toISOString();
 
     await client.send(
       new UpdateCommand({
         TableName: tableName,
-        Key: { id },
+        Key: { id, timestamp: post.timestamp },
         UpdateExpression: "SET lastVerificationDate = :date",
         ExpressionAttributeValues: { ":date": now },
       }),
@@ -122,13 +157,20 @@ function createPostRepository(client, options = {}) {
     cutoff.setHours(cutoff.getHours() - hours);
     const cutoffISO = cutoff.toISOString();
 
+    // Query en GSI by-timestamp con filtro de verificación
     const result = await client.send(
-      new ScanCommand({
+      new QueryCommand({
         TableName: tableName,
-        Limit: limit,
+        IndexName: "by-timestamp",
+        KeyConditionExpression: "timestamp > :minTimestamp",
         FilterExpression:
           "attribute_not_exists(lastVerificationDate) OR lastVerificationDate < :cutoff",
-        ExpressionAttributeValues: { ":cutoff": cutoffISO },
+        ExpressionAttributeValues: {
+          ":minTimestamp": "1970-01-01T00:00:00.000Z",
+          ":cutoff": cutoffISO,
+        },
+        Limit: limit,
+        ScanIndexForward: false,
       }),
     );
 

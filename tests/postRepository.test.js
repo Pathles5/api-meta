@@ -61,8 +61,9 @@ describe("postRepository", () => {
 
   describe("getPost", () => {
     it("should return post when found", async () => {
+      // getPost ahora usa QueryCommand (devuelve Items, no Item)
       mockSend.mock.mockImplementationOnce(async () => ({
-        Item: samplePost,
+        Items: [samplePost],
       }));
 
       const result = await repo.getPost("123456");
@@ -72,8 +73,9 @@ describe("postRepository", () => {
     });
 
     it("should return null when not found", async () => {
+      // QueryCommand devuelve Items vacío cuando no encuentra nada
       mockSend.mock.mockImplementationOnce(async () => ({
-        Item: undefined,
+        Items: [],
       }));
 
       const result = await repo.getPost("nonexistent");
@@ -83,7 +85,7 @@ describe("postRepository", () => {
   });
 
   describe("listPosts", () => {
-    it("should return list of posts", async () => {
+    it("should return list of posts with pagination info", async () => {
       mockSend.mock.mockImplementationOnce(async () => ({
         Items: [samplePost],
       }));
@@ -91,27 +93,86 @@ describe("postRepository", () => {
       const result = await repo.listPosts(10);
 
       assert.equal(mockSend.mock.callCount(), 1);
-      assert.ok(Array.isArray(result));
-      assert.equal(result.length, 1);
+      assert.ok(Array.isArray(result.items));
+      assert.equal(result.items.length, 1);
+      assert.equal(result.nextCursor, null);
     });
 
-    it("should return empty array when no items", async () => {
+    it("should return empty items when no results", async () => {
       mockSend.mock.mockImplementationOnce(async () => ({
         Items: undefined,
       }));
 
       const result = await repo.listPosts();
 
-      assert.ok(Array.isArray(result));
-      assert.equal(result.length, 0);
+      assert.ok(Array.isArray(result.items));
+      assert.equal(result.items.length, 0);
+      assert.equal(result.nextCursor, null);
+    });
+
+    it("should return nextCursor when LastEvaluatedKey is present", async () => {
+      const lastKey = { id: "123", timestamp: "2026-01-01T00:00:00.000Z" };
+      mockSend.mock.mockImplementationOnce(async () => ({
+        Items: [samplePost],
+        LastEvaluatedKey: lastKey,
+      }));
+
+      const result = await repo.listPosts(1);
+
+      assert.equal(result.items.length, 1);
+      assert.ok(result.nextCursor);
+      const decoded = JSON.parse(Buffer.from(result.nextCursor, "base64").toString("utf-8"));
+      assert.deepEqual(decoded, lastKey);
+    });
+
+    it("should pass ExclusiveStartKey when cursor is provided", async () => {
+      const cursorKey = { id: "123", timestamp: "2026-01-01T00:00:00.000Z" };
+      const cursor = Buffer.from(JSON.stringify(cursorKey)).toString("base64");
+
+      mockSend.mock.mockImplementationOnce(async () => ({
+        Items: [samplePost],
+      }));
+
+      await repo.listPosts(10, cursor);
+
+      const callArgs = mockSend.mock.calls[0].arguments[0].input;
+      assert.deepEqual(callArgs.ExclusiveStartKey, cursorKey);
+    });
+
+    it("should ignore invalid cursor and query from start", async () => {
+      mockSend.mock.mockImplementationOnce(async () => ({
+        Items: [samplePost],
+      }));
+
+      const result = await repo.listPosts(10, "invalid-base64-cursor!!!");
+
+      assert.equal(result.items.length, 1);
+      const callArgs = mockSend.mock.calls[0].arguments[0].input;
+      assert.equal(callArgs.ExclusiveStartKey, undefined);
     });
   });
 
   describe("deletePost", () => {
     it("should delete post from DynamoDB", async () => {
-      mockSend.mock.mockImplementationOnce(async () => ({}));
+      // deletePost primero llama a getPost (QueryCommand) para obtener el timestamp
+      let callCount = 0;
+      mockSend.mock.mockImplementation(async () => {
+        callCount++;
+        if (callCount === 1) return { Items: [samplePost] }; // getPost
+        return {}; // deleteCommand
+      });
 
       await repo.deletePost("123456");
+
+      assert.equal(mockSend.mock.callCount(), 2);
+    });
+
+    it("should do nothing when post does not exist", async () => {
+      mockSend.mock.mockImplementationOnce(async () => ({
+        Items: [],
+      }));
+
+      await repo.deletePost("nonexistent");
 
       assert.equal(mockSend.mock.callCount(), 1);
     });
@@ -138,13 +199,30 @@ describe("postRepository", () => {
 
   describe("updateVerificationDate", () => {
     it("should update lastVerificationDate", async () => {
-      mockSend.mock.mockImplementationOnce(async () => ({}));
+      // updateVerificationDate primero llama a getPost (QueryCommand) para obtener el timestamp
+      let callCount = 0;
+      mockSend.mock.mockImplementation(async () => {
+        callCount++;
+        if (callCount === 1) return { Items: [samplePost] }; // getPost
+        return {}; // updateCommand
+      });
 
       const result = await repo.updateVerificationDate("123456");
 
-      assert.equal(mockSend.mock.callCount(), 1);
+      assert.equal(mockSend.mock.callCount(), 2);
       assert.ok(result);
       assert.ok(typeof result === "string");
+    });
+
+    it("should return null when post does not exist", async () => {
+      mockSend.mock.mockImplementationOnce(async () => ({
+        Items: [],
+      }));
+
+      const result = await repo.updateVerificationDate("nonexistent");
+
+      assert.equal(mockSend.mock.callCount(), 1);
+      assert.equal(result, null);
     });
   });
 

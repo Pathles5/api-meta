@@ -1,27 +1,30 @@
-﻿# Current Task
+# Current Work
 
-**Estado**: Sesión completada - 2026-06-07
+## Feature en curso: FEAT-027 — Implement S3 Multimedia Storage
 
-## Resumen de la sesión
+**Status**: review-required
+**Started**: 2026-06-14
+**Completed**: 2026-06-14
 
-### Tareas completadas:
-- ✅ FEAT-012: CloudWatch Monitoring con SNS (6 alarmas + notificaciones por email)
-- ✅ FEAT-013: API Documentation (OpenAPI fixes completos)
-- ✅ FEAT-014: Cost Review & Optimization (Logs retention + Lambda timeout)
-- ✅ Seguridad: IAM policy restringida (reemplazo de AdministratorAccess)
-- ✅ AWS Budgets: Configurado manualmente para alertar a 3€
-- ✅ Backlog: Creada sección para tareas diferidas
+## Resultado
+- ✅ `src/config/s3.js` creado — S3 client singleton (patrón igual que dynamodb.js)
+- ✅ `src/services/mediaStorageService.js` creado — descarga media de Instagram y sube a S3
+- ✅ `infra/lib/ig-api-stack.js` actualizado — S3 bucket + IAM + env var
+- ✅ `tests/mediaStorageService.test.js` creado — 27 tests
+- ✅ `tests/s3Config.test.js` creado — 4 tests
+- ✅ 199/199 tests pasan
+- ✅ `node init.js` validación exitosa
 
-### Tareas diferidas al backlog:
-- ⏸️ FEAT-015: Load & Stress Testing (hasta que la app esté cerca de release)
-- ⏸️ FEAT-017: Image Storage Strategy (pendiente de decisión)
+## Archivos modificados
+- `src/config/s3.js` (nuevo)
+- `src/services/mediaStorageService.js` (nuevo)
+- `infra/lib/ig-api-stack.js` (añadido S3 bucket, IAM grant, env var, tags)
+- `tests/mediaStorageService.test.js` (nuevo)
+- `tests/s3Config.test.js` (nuevo)
+- `package.json` (añadido @aws-sdk/client-s3)
 
-### Próximas tareas (Phase 9):
-- FEAT-022: Define DynamoDB Data Model
-- FEAT-019: META Token Management from AWS Systems Manager
-- FEAT-020: Evaluate META Token Strategy
-
-### Estado del proyecto:
-- Phase 0-7: Completadas
-- Phase 8: Completada (con 2 tareas en backlog)
-- Phase 9: Pendiente de iniciar
+## Decisiones
+- S3 key format: `media/{postId}/{filename}` para organización por post
+- Bucket lifecycle: 90 días (alineado con DynamoDB TTL)
+- RemovalPolicy: RETAIN (no borrar media accidentalmente)
+- Soporta IMAGE, VIDEO (con thumbnail), CAROUSEL_ALBUM

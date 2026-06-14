@@ -1,4 +1,4 @@
-﻿{
+{
     "project":  "IG-API",
     "version":  "1.0",
     "last_updated":  "2026-06-07",
@@ -200,10 +200,11 @@
                          "dependencies":  [
                                               "FEAT-007"
                                           ],
-                         "status":  "pending",
+                         "status":  "completed",
                          "title":  "META Token Management from AWS Systems Manager",
                          "priority":  "high",
-                         "assigned_agent":  "none"
+                         "assigned_agent":  "implementer",
+                         "completed_date":  "2026-06-13"
                      },
                      {
                          "id":  "FEAT-020",
@@ -226,24 +227,26 @@
                          "dependencies":  [
                                               "FEAT-020"
                                           ],
-                         "status":  "pending",
+                         "status":  "completed",
                          "title":  "Automatic META Token Rotation",
                          "priority":  "high",
-                         "assigned_agent":  "none"
+                         "assigned_agent":  "implementer",
+                         "completed_date":  "2026-06-13"
                      },
                      {
-                         "id":  "FEAT-022",
-                         "estimated_effort":  "medium",
-                         "description":  "Define the DynamoDB data model/schema for storing Instagram posts and related data. Define fields, data types, indexes, and access patterns even if not immediately needed.",
-                         "phase":  9,
-                         "dependencies":  [
-                                              "FEAT-005"
-                                          ],
-                         "status":  "pending",
-                         "title":  "Define DynamoDB Data Model",
-                         "priority":  "high",
-                         "assigned_agent":  "none"
-                     },
+                          "id":  "FEAT-022",
+                          "estimated_effort":  "medium",
+                          "description":  "Define the DynamoDB data model/schema for storing Instagram posts and related data. Define fields, data types, indexes, and access patterns even if not immediately needed.",
+                          "phase":  9,
+                          "dependencies":  [
+                                               "FEAT-005"
+                                           ],
+                          "status":  "completed",
+                          "title":  "Define DynamoDB Data Model",
+                          "priority":  "high",
+                          "assigned_agent":  "implementer",
+                          "completed_date":  "2026-06-13"
+                      },
                      {
                          "id":  "FEAT-023",
                          "estimated_effort":  "small",

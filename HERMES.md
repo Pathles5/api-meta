@@ -130,9 +130,9 @@ pnpm test:coverage    # Run tests with coverage
 
 ### Infrastructure
 ```bash
-pnpm cdk synth        # Synthesize CloudFormation
-pnpm cdk diff         # Show infrastructure changes
-pnpm cdk deploy       # Deploy to AWS (requires approval)
+# ⚠️ PROHIBIDO ejecutar comandos CDK desde local
+# La infraestructura se despliega EXCLUSIVAMENTE desde GitHub Actions CI/CD
+# Los comandos cdk synth, cdk diff y cdk deploy se ejecutan en el workflow
 ```
 
 ### Validation

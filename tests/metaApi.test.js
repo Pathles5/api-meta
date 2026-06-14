@@ -1,39 +1,27 @@
 import { describe, it, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
+import { _setCachedToken, invalidateCache } from "../src/services/tokenService.js";
 
 const originalEnv = process.env;
 
 describe("MetaApi Service", () => {
   beforeEach(() => {
     process.env = { ...originalEnv };
+    process.env.META_IG_USER_ID = "test-ig-user";
+    invalidateCache();
   });
 
   afterEach(() => {
     process.env = originalEnv;
     globalThis.fetch = originalFetch;
+    invalidateCache();
   });
 
   const originalFetch = globalThis.fetch;
 
-  it("should throw error when META_ACCESS_TOKEN is not set", async () => {
-    delete process.env.META_ACCESS_TOKEN;
-    process.env.META_IG_USER_ID = "test-ig-user";
-
-    const { fetchPost } = await import("../src/services/metaApi.js");
-
-    await assert.rejects(
-      () => fetchPost("test-id"),
-      (error) => {
-        assert.equal(error.statusCode, 500);
-        assert.ok(error.message.includes("META_ACCESS_TOKEN"));
-        return true;
-      }
-    );
-  });
-
   it("should throw error when META_IG_USER_ID is not set", async () => {
-    process.env.META_ACCESS_TOKEN = "test-token";
     delete process.env.META_IG_USER_ID;
+    _setCachedToken("test-token");
 
     const { fetchPosts } = await import("../src/services/metaApi.js");
 
@@ -47,9 +35,8 @@ describe("MetaApi Service", () => {
     );
   });
 
-  it("should fetch post successfully", async () => {
-    process.env.META_ACCESS_TOKEN = "test-token";
-    process.env.META_IG_USER_ID = "test-ig-user";
+  it("should fetch post successfully using SSM token", async () => {
+    _setCachedToken("ssm-test-token");
 
     const mockResponse = {
       id: "123456",
@@ -62,9 +49,12 @@ describe("MetaApi Service", () => {
       comments_count: 10,
     };
 
-    globalThis.fetch = async () => ({
-      json: async () => mockResponse,
-    });
+    globalThis.fetch = async (url) => {
+      assert.ok(url.includes("access_token=ssm-test-token"));
+      return {
+        json: async () => mockResponse,
+      };
+    };
 
     const { fetchPost } = await import("../src/services/metaApi.js");
     const post = await fetchPost("123456");
@@ -77,8 +67,7 @@ describe("MetaApi Service", () => {
   });
 
   it("should fetch posts list successfully", async () => {
-    process.env.META_ACCESS_TOKEN = "test-token";
-    process.env.META_IG_USER_ID = "test-ig-user";
+    _setCachedToken("test-token");
 
     const mockResponse = {
       data: [
@@ -120,8 +109,7 @@ describe("MetaApi Service", () => {
   });
 
   it("should handle Meta API error code 190 (invalid token)", async () => {
-    process.env.META_ACCESS_TOKEN = "invalid-token";
-    process.env.META_IG_USER_ID = "test-ig-user";
+    _setCachedToken("invalid-token");
 
     globalThis.fetch = async () => ({
       json: async () => ({
@@ -145,8 +133,7 @@ describe("MetaApi Service", () => {
   });
 
   it("should handle Meta API rate limit error (code 4)", async () => {
-    process.env.META_ACCESS_TOKEN = "test-token";
-    process.env.META_IG_USER_ID = "test-ig-user";
+    _setCachedToken("test-token");
 
     globalThis.fetch = async () => ({
       json: async () => ({
@@ -170,8 +157,7 @@ describe("MetaApi Service", () => {
   });
 
   it("should handle post not found (code 100)", async () => {
-    process.env.META_ACCESS_TOKEN = "test-token";
-    process.env.META_IG_USER_ID = "test-ig-user";
+    _setCachedToken("test-token");
 
     globalThis.fetch = async () => ({
       json: async () => ({

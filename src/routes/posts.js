@@ -29,6 +29,32 @@ function createPostsRouter(
     }
   });
 
+  /**
+   * GET /posts/list?limit=N&cursor=xxx
+   * Lee N posts desde DynamoDB con paginacion por cursor.
+   */
+  router.get("/list", async (req, res, next) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit, 10) : 20;
+      const cursor = req.query.cursor || null;
+
+      if (Number.isNaN(limit) || limit < 1 || limit > 100) {
+        return next(createError(400, "Limit must be between 1 and 100"));
+      }
+
+      const result = await repo.listPosts(limit, cursor);
+
+      res.json({
+        data: result.items,
+        paging: {
+          nextCursor: result.nextCursor,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   router.get("/:id", async (req, res, next) => {
     try {
       const { id } = req.params;

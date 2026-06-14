@@ -7,7 +7,7 @@ import path from 'path';
 // const { execSync } = require('child_process');
 import { execSync } from 'child_process';
 
-// Colores para terminal (funciona en Windows Terminal, VS Code y OpenCode CLI)
+// Colores para terminal (funciona en Windows Terminal, VS Code y Hermes Agent)
 const colors = {
   reset: '\x1b[0m',
   red: '\x1b[31m',
@@ -39,7 +39,7 @@ try {
   if (majorVersion >= 20) {
     log.success(`Node.js instalado: ${nodeVersion}`);
   } else {
-    log.warn(`Se recomienda Node.js 24+. Versión actual: ${nodeVersion}`);
+    log.warn(`Se recomienda Node.js 22+. Versión actual: ${nodeVersion}`);
     warnings++;
   }
 } catch (e) {
@@ -83,7 +83,7 @@ const optionalDirs = ['.github', 'scripts', 'tools', 'progress', 'specs'];
 log.section('3. Verificando archivos de contexto y reglas...');
 const requiredFiles = [
   'OPENCODE.md', 'AGENTS.md', 'PROJECT_CONTEXT.md', 'README.md',
-  'CHECKPOINTS.md', 'feature_list.json', '.opencode/opencode.jsonc',
+  'CHECKPOINTS.md', 'feature_list.json',
   'docs/conventions.md', 'docs/architecture.md', 'docs/verification.md',
   'progress/current.md', 'progress/history.md'
 ];
@@ -182,7 +182,7 @@ if (fs.existsSync('package.json')) {
 // ============================================================================
 log.section('Resumen Final');
 if (errors === 0) {
-  log.success('VALIDACIÓN EXITOSA: El proyecto está listo para OpenCode CLI.');
+  log.success('VALIDACIÓN EXITOSA: El proyecto está listo para Hermes Agent.');
   if (warnings > 0) {
     log.warn(`Se encontraron ${warnings} advertencia(s) no bloqueantes. Revísalas arriba.`);
   }

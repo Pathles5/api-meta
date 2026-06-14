@@ -10,7 +10,7 @@ REST API for integrating with Meta's Instagram API to retrieve posts and handle 
 
 ## Tech Stack
 
-- **Runtime**: Node.js 24
+- **Runtime**: Node.js 22
 - **Package Manager**: PNPM
 - **Framework**: Express.js 5
 - **Logger**: pino
@@ -357,7 +357,7 @@ The API uses `pino` for structured JSON logging.
 
 ### Prerequisites
 
-- Node.js 24+
+- Node.js 22+
 - PNPM
 - Java 21+ (for DynamoDB Local)
 
@@ -603,15 +603,13 @@ git checkout pro  → IG_ENV=pro
 
 ### Desplegar a un entorno específico
 
+> ⚠️ **Los despliegues se realizan EXCLUSIVAMENTE desde GitHub Actions CI/CD.**
+> Nunca ejecutes `pnpm cdk deploy` desde local. Para desplegar, haz push a la branch correspondiente:
+
 ```bash
-# Desplegar a pre (default)
-pnpm cdk deploy
-
-# Desplegar a pro
-IG_ENV=pro pnpm cdk deploy
-
-# Desplegar a int
-IG_ENV=int pnpm cdk deploy
+git checkout pre && git push   → Deploy automático a pre
+git checkout int && git push   → Deploy automático a int
+git checkout pro && git push   → Deploy automático a pro (con approval manual)
 ```
 
 ### Flujo de Despliegue

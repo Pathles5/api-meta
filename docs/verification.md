@@ -38,15 +38,26 @@ describe('GET /posts/:id', () => {
   });
 });
 ```
-### Nivel 3 — Validación de Infraestructura y Smoke Test (Obligatorio para cambios en infra/ o src/)
-Antes de cerrar la sesión, se debe demostrar que el sistema compila/sintetiza correctamente y que los endpoints básicos responden.
-**Comandos de ejecución:**
-```bash
-# 1. Validar que la infraestructura CDK es válida y no excede límites
-pnpm cdk synth --no-lookups
+## Nivel 3 — Validación de Infraestructura (Obligatorio para cambios en infra/)
 
-# 2. (Opcional pero recomendado) Smoke test local del endpoint de salud
-curl -i http://localhost:3000/health
+Los cambios en infraestructura (directorio `infra/`) se validan automáticamente en CI/CD mediante GitHub Actions. **NO se ejecutan comandos CDK desde local.**
+
+**Flujo de validación:**
+1. El agente escribe/modifica archivos en `infra/` siguiendo las convenciones del proyecto
+2. Verifica que la sintaxis JS es correcta (lint, imports, etc.)
+3. Hace commit y push → GitHub Actions ejecuta `cdk synth` y `cdk deploy` automáticamente
+4. Si el deploy falla, el agente revisa los logs del workflow y corrige
+
+**⚠️ Regla estricta:**
+- ❌ NUNCA ejecutar `pnpm cdk synth`, `pnpm cdk deploy`, `pnpm cdk diff`, `pnpm cdk destroy` desde local
+- ✅ La infraestructura se despliega EXCLUSIVAMENTE desde el workflow de GitHub Actions
+- ✅ El agente solo necesita asegurar que el código en `infra/` sea sintácticamente correcto
+
+**Comandos permitidos desde local:**
+```bash
+# Solo validación de sintaxis y lint (NO cdk)
+pnpm lint
+node -c infra/lib/ig-api-stack.js
 ```
 
 ## Anti-patrones (NO HACER)

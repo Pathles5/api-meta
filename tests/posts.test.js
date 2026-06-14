@@ -1,6 +1,7 @@
 import { describe, it, before, after, beforeEach, afterEach, mock } from "node:test";
 import assert from "node:assert/strict";
 import { stopCleanup } from "../src/middleware/rateLimit.js";
+import { _setCachedToken, _setSsmClient, invalidateCache } from "../src/services/tokenService.js";
 
 const originalEnv = process.env;
 const originalFetch = globalThis.fetch;
@@ -73,7 +74,7 @@ async function apiFetch(path, options = {}) {
 }
 
 before(async () => {
-  process.env.META_ACCESS_TOKEN = "test-token";
+  _setCachedToken("test-token");
   process.env.META_IG_USER_ID = "test-ig-user";
   process.env.AUTH_API_KEY = "test-api-key";
 
@@ -116,9 +117,9 @@ after(async () => {
 
 describe("GET /posts", () => {
   beforeEach(() => {
-    process.env.META_ACCESS_TOKEN = "test-token";
-    process.env.IG_USER_ID = "test-ig-user";
-    process.env.API_KEY = "test-api-key";
+    _setCachedToken("test-token");
+    process.env.META_IG_USER_ID = "test-ig-user";
+    process.env.AUTH_API_KEY = "test-api-key";
     globalThis.fetch = originalFetch;
     resetMocks();
   });
@@ -182,7 +183,10 @@ describe("GET /posts", () => {
   });
 
   it("should return 500 when META_ACCESS_TOKEN is not set", async () => {
-    delete process.env.META_ACCESS_TOKEN;
+    invalidateCache();
+    const notFoundError = new Error("Parameter not found");
+    notFoundError.name = "ParameterNotFound";
+    _setSsmClient({ send: async () => { throw notFoundError; } });
 
     const response = await apiFetch("/posts");
     const body = await response.json();
@@ -222,9 +226,9 @@ describe("GET /posts", () => {
 
 describe("GET /posts/:id", () => {
   beforeEach(() => {
-    process.env.META_ACCESS_TOKEN = "test-token";
-    process.env.IG_USER_ID = "test-ig-user";
-    process.env.API_KEY = "test-api-key";
+    _setCachedToken("test-token");
+    process.env.META_IG_USER_ID = "test-ig-user";
+    process.env.AUTH_API_KEY = "test-api-key";
     globalThis.fetch = originalFetch;
     resetMocks();
   });
@@ -342,7 +346,10 @@ describe("GET /posts/:id", () => {
   });
 
   it("should return 500 when META_ACCESS_TOKEN is not set", async () => {
-    delete process.env.META_ACCESS_TOKEN;
+    invalidateCache();
+    const notFoundError = new Error("Parameter not found");
+    notFoundError.name = "ParameterNotFound";
+    _setSsmClient({ send: async () => { throw notFoundError; } });
 
     const response = await apiFetch("/posts/123456");
     const body = await response.json();
@@ -372,7 +379,7 @@ describe("GET /posts/:id", () => {
 
 describe("POST /posts/sync", () => {
   beforeEach(() => {
-    process.env.META_ACCESS_TOKEN = "test-token";
+    _setCachedToken("test-token");
     process.env.META_IG_USER_ID = "test-ig-user";
     process.env.AUTH_API_KEY = "test-api-key";
     globalThis.fetch = originalFetch;

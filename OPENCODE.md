@@ -28,6 +28,7 @@ Al iniciar cualquier conversación o tarea nueva, DEBES leer y procesar el sigui
    - Usa **PNPM** (nunca NPM o YARN).
    - Justifica cualquier nueva dependencia (preferir librerías maduras).
    - Explica riesgos de mantenimiento o seguridad antes de instalar.
+5. **Infraestructura (CDK)**: 🚫 **PROHIBIDO ejecutar comandos CDK desde local**. Los comandos `cdk synth`, `cdk diff`, `cdk deploy` y `cdk destroy` se ejecutan EXCLUSIVAMENTE desde el workflow de GitHub Actions CI/CD. Desde local solo se puede editar código en `infra/` y validar sintaxis JS (`node -c`, `pnpm lint`). Nunca levantes ni modifiques infraestructura AWS desde la máquina local.
 
 ---
 

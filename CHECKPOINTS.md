@@ -5,8 +5,9 @@
 > debe usar para decidir si el proyecto está sano y la sesión puede cerrarse.
 
 ## C1 — El arnés está completo
-- [ ] Existen los archivos base: `OPENCODE.md`, `AGENTS.md`, `opencode.json`, `init.js`, `feature_list.json`, `progress/current.md`.
+- [ ] Existen los archivos base: `OPENCODE.md`, `AGENTS.md`, `init.js`, `feature_list.json`, `progress/current.md`.
 - [ ] Existen los docs de reglas: `docs/architecture.md`, `docs/conventions.md`, `docs/verification.md`.
+- [ ] Existen los skills de roles: `role-leader`, `role-explorer`, `role-implementer`, `role-reviewer`, `role-devops`, `role-documentation`.
 - [ ] El comando `node init.js` termina con exit code 0 (sin errores críticos).
 
 ## C2 — El estado es coherente
@@ -25,7 +26,7 @@
 - [ ] El directorio `tests/` tiene al menos un test por módulo nuevo o modificado en `src/`.
 - [ ] Los tests utilizan el patrón de **Inyección de Dependencias** (Factories) para mockear repositorios o APIs externas, evitando mocks frágiles del sistema de archivos o módulos.
 - [ ] El comando `pnpm test` muestra > 0 tests ejecutados y todos en verde.
-- [ ] *(Si aplica)* El comando `pnpm cdk synth --no-lookups` termina sin errores tras cambios en `infra/`.
+- [ ] *(Si aplica)* Cambios en `infra/` validados: sintaxis JS correcta y `cdk synth` se ejecutará en CI/CD (no se ejecuta cdk desde local).
 
 ## C5 — La sesión se cerró correctamente
 - [ ] No hay archivos sin trackear sospechosos en git (ej: `.env` real, `*.tmp`, `cdk.out` si está en `.gitignore`).

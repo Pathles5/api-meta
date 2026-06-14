@@ -15,7 +15,6 @@ new IgApiStack(app, stackName, {
   env,
   environment,
   tableName: process.env.DYNAMODB_TABLE_NAME || `ig-posts-${environment}`,
-  metaAccessToken: process.env.META_ACCESS_TOKEN,
   igUserId: process.env.META_IG_USER_ID,
   authApiKey: process.env.AUTH_API_KEY,
   verificationHours: process.env.POST_VERIFICATION_HOURS || "24",
