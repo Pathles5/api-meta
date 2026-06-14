@@ -113,6 +113,85 @@ El proyecto usa múltiples entornos con stacks CDK independientes:
 
 ---
 
+## 🔄 Sistema de Creación de Tareas por Perfil
+
+Cualquier perfil puede detectar y crear tareas, pero con reglas estrictas para mantener el orden y evitar proliferación.
+
+### Matriz de Permisos de Creación
+
+| Perfil | Puede crear tareas para | Estado inicial | Requiere validación |
+|--------|------------------------|----------------|---------------------|
+| **leader** | Cualquier perfil | `todo` (directo) | ❌ No |
+| **reviewer** | `implementer` (fix tras review) | `todo` (directo) | ❌ No |
+| **devops** | Cualquiera | `triage` | ✅ Leader valida |
+| **explorer** | Cualquiera | `triage` | ✅ Leader valida |
+| **implementer** | Cualquiera | `triage` | ✅ Leader valida |
+| **documentation** | Cualquiera | `triage` | ✅ Leader valida |
+
+### Reglas de Oro para Creación de Tareas
+
+1. **Flujos naturales sin validación:**
+   - `reviewer → implementer`: Fix tras review (ciclo natural de calidad)
+   - `leader → cualquiera`: Orquestación pura (planificación estratégica)
+
+2. **Triage obligatorio:**
+   - Otros perfiles crean en estado `triage`
+   - Leader revisa periódicamente tareas en triage
+   - Leader promociona a `todo` o descarta con justificación
+
+3. **Prevención de ciclos:**
+   - Nunca crear tareas circulares (A espera a B, B espera a A)
+   - Toda tarea debe tener criterios de aceptación claros en el body
+   - Si una tarea genera más de 3 subtareas, reconsiderar el alcance
+
+4. **Calidad de definición:**
+   - Toda tarea debe incluir: qué, por qué, criterios de aceptación
+   - Si es un fix: reproducir el problema y expected behavior
+   - Si es una feature: user story o caso de uso
+
+### Ejemplo: DevOps detecta bug en CI/CD
+
+```
+1. DevOps analiza workflow de GitHub Actions
+2. Encuentra: "lint fails por import incorrecto en src/handlers/posts.js"
+3. DevOps crea tarea en triage:
+   - title: "Fix: lint error en posts.js"
+   - assignee: implementer
+   - body: "El workflow falla en el paso lint. Import incorrecto en línea 15. Expected: importar desde '../utils/logger.js' en lugar de './logger.js'"
+   - status: triage
+4. Leader revisa triage, valida, promociona a todo
+5. Implementer arregla + crea tarea de test
+6. Reviewer valida el fix
+7. DevOps verifica que el workflow pasa
+```
+
+---
+
+## 🎯 Flujo Completo de Trabajo (Workflow)
+
+Para cada nueva feature o cambio significativo, el enjambre DEBE seguir este orden:
+
+1. **Leader**: Analiza la solicitud, actualiza `progress/current.md` a `in_progress` y define el plan.
+2. **Explorer**: Valida el contexto, estructura y dependencias. Entrega el "Context Brief". (Puede crear tareas en triage si encuentra issues adicionales)
+3. **Leader**: Aprueba el plan y lo pasa al **Implementer** junto con el Brief.
+4. **Implementer**: Ejecuta los cambios en los archivos, siguiendo estrictamente el plan. (Puede crear tareas en triage si encuentra bloqueos o dependencias)
+5. **Implementer/Leader**: Crea tarea de test dependiente (asignada al perfil adecuado) para cubrir los cambios implementados. Esta tarea debe ejecutarse antes del review final.
+6. **Reviewer**: Ejecuta el checklist de calidad y seguridad. Si falla, crea fix directo para implementer. Si pasa, aprueba.
+7. **DevOps / Documentation**: (Solo si el cambio lo requiere) El Leader delega la actualización de infraestructura o documentación. (Pueden crear tareas en triage si encuentran issues)
+8. **Leader revisa completitud estratégica:**
+   - ¿Se cumplieron todos los criterios de aceptación?
+   - ¿Falta documentación? ¿Infraestructura? ¿Otra feature relacionada?
+   - ¿Hay tareas en triage que validar?
+   - Si falta algo: crea tareas dependientes automáticamente
+   - Si todo está completo: promociona a done
+9. **Leader**: Resume los cambios para el usuario, actualiza `feature_list.json` a `completed` y **SE DETIENE**.
+
+**Regla de Tests Obligatorios**: Cada tarea de desarrollo (feature, evolución, fix) genera automáticamente una tarea de test dependiente. El flujo no avanza al Reviewer hasta que las pruebas estén implementadas o la tarea de test esté creada y asignada.
+
+**Regla de Triage**: El Leader revisa tareas en triage al menos una vez por sesión. Si una tarea lleva más de 24h en triage sin validar, el sistema la marca como stale.
+
+---
+
 ## 🤖 Ejecución de Perfiles en Hermes Agent
 
 Los perfiles definidos anteriormente se ejecutan en Hermes Agent mediante **perfiles separados** y **delegate_task**.
@@ -221,27 +300,11 @@ const results = await delegate_task(tasks=[
 
 - **Leader NUNCA edita código**: Solo edita `feature_list.json` y `progress/`
 - **Explorer NUNCA propone código**: Solo investiga y escribe hallazgos
-- **Implementer NUNCA marca done**: Espera aprobación del Reviewer
-- **Reviewer NUNCA edita código**: Solo valida y emite veredicto
+- **Implementer NUNCA marca done sin tests**: Espera aprobación del Reviewer y tarea de test creada
+- **Reviewer puede crear fixes directos**: Para implementer tras review (flujo natural sin triage)
 - **DevOps NUNCA ejecuta CDK desde local**: Solo edita infra/ y valida sintaxis
 - **Documentation NUNCA usa bash**: Solo edita archivos de documentación
-
----
-
-## 🔄 Protocolo de Flujo de Trabajo (Workflow)
-
-Para cada nueva feature o cambio significativo, el enjambre DEBE seguir este orden estricto:
-
-1. **Leader**: Analiza la solicitud, actualiza `progress/current.md` a `in_progress` y define el plan.
-2. **Explorer**: Valida el contexto, estructura y dependencias. Entrega el "Context Brief".
-3. **Leader**: Aprueba el plan y lo pasa al **Implementer** junto con el Brief.
-4. **Implementer**: Ejecuta los cambios en los archivos, siguiendo estrictamente el plan.
-5. **Implementer/Leader**: Crea tarea de test dependiente (asignada al perfil adecuado) para cubrir los cambios implementados. Esta tarea debe ejecutarse antes del review final.
-6. **Reviewer**: Ejecuta el checklist de calidad y seguridad. Si falla, vuelve al paso 4. Si pasa, aprueba.
-7. **DevOps / Documentation**: (Solo si el cambio lo requiere) El Leader delega la actualización de infraestructura o documentación.
-8. **Leader**: Resume los cambios para el usuario, actualiza `feature_list.json` a `completed` y **SE DETIENE**.
-
-**Regla de Tests Obligatorios**: Cada tarea de desarrollo (feature, evolución, fix) genera automáticamente una tarea de test dependiente. El flujo no avanza al Reviewer hasta que las pruebas estén implementadas o la tarea de test esté creada y asignada.
+- **Todos los perfiles pueden crear tareas en triage**: Excepto leader (directo) y reviewer (fix directo)
 
 ---
 

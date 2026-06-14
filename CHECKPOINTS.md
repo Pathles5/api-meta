@@ -33,6 +33,9 @@
 - [ ] No hay archivos sin trackear sospechosos en git (ej: `.env` real, `*.tmp`, `cdk.out` si está en `.gitignore`).
 - [ ] `progress/history.md` tiene una nueva entrada al final resumiendo la sesión actual.
 - [ ] La última feature trabajada tiene su estado actualizado correctamente en `feature_list.json` (`completed`, `blocked` o `in_progress`).
+- [ ] **No hay tareas en triage sin revisar**: El Leader debe validar todas las tareas en estado `triage` antes de cerrar la sesión. Promover a `todo` o descartar con justificación.
+- [ ] **No hay tareas circulares**: Verificar con `hermes kanban list` que no existen dependencias circulares (A → B → A).
+- [ ] **Leader validó completitud estratégica**: Antes de cerrar, el Leader revisó que no falten docs, infra, tests o features relacionadas.
 
 ---
 

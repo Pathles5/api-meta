@@ -9,6 +9,7 @@ Todos los recursos están dentro del **AWS Free Tier** para uso moderado.
 | Lambda | 1M requests/mes + 400,000 GB-seconds | < 100K requests | **$0** |
 | API Gateway | 1M requests/mes | < 100K requests | **$0** |
 | DynamoDB | 25 GB storage + 25 WCU/25 RCU | < 1 GB | **$0** |
+| S3 | 5 GB storage + 20K GET + 2K PUT/mes | < 1 GB (lifecycle 90 días) | **$0** |
 | CloudWatch | 10 métricas + 5 alarms + 3 dashboards | 9 métricas + 6 alarms + 1 dashboard | **$0.10** (1 alarma excede Free Tier) |
 | CloudWatch Logs | 5 GB ingestión + 5 GB storage | < 1 GB | **$0** |
 | SNS | 1,000 email notifications/mes | < 100 (solo alarmas) | **$0** |
@@ -75,6 +76,34 @@ Todos los recursos están dentro del **AWS Free Tier** para uso moderado.
 - $1.25 por WCU-mes
 - $0.25 por RCU-mes
 - On-demand: $1.25 por millón de writes, $0.25 por millón de reads
+
+### Amazon S3
+
+**Free Tier:**
+- 5 GB de almacenamiento estándar
+- 20,000 GET requests/mes
+- 2,000 PUT/COPY/POST/DELETE requests/mes
+- 15 GB de transferencia de datos salientes
+
+**Configuración actual:**
+- Bucket: `ig-api-{env}-media-{env}`
+- Lifecycle: 90 días (auto-eliminación de objetos, alineado con DynamoDB TTL)
+- Versioning: deshabilitado (no acumula versiones antiguas)
+- RemovalPolicy: RETAIN (previene eliminación accidental del bucket)
+- IAM: grantReadWrite a Lambda (sin access keys estáticas)
+
+**Uso estimado:**
+- Storage: < 1 GB (20% del Free Tier) — asumiendo ~500 posts/mes con imágenes de 1-2 MB
+- PUT requests: < 1,000/mes (50% del Free Tier)
+- GET requests: < 5,000/mes (25% del Free Tier)
+
+**Nota:** El lifecycle de 90 días garantiza que el almacenamiento no crezca indefinidamente.
+Los objetos se eliminan automáticamente, manteniendo el uso dentro del Free Tier.
+
+**Costo si excede Free Tier:**
+- $0.023 por GB-mes de almacenamiento estándar
+- $0.0004 por 1,000 GET requests
+- $0.005 por 1,000 PUT requests
 
 ### CloudWatch
 
@@ -173,8 +202,9 @@ Todos los recursos están dentro del **AWS Free Tier** para uso moderado.
 2. **Configurar budget alerts** — Crear alerta en AWS Budgets para > $1/mes
 3. **Optimizar Lambda** — Timeout reducido a 15s (desde 30s). Si duración > 1s, considerar reducir memoria u optimizar código
 4. **DynamoDB TTL** — Ya configurado, posts expiran automáticamente a 30 días
-5. **API Gateway caching** — Si uso crece, considerar habilitar caching para reducir llamadas a Lambda
-6. **Logs retention** — Configurado a 30 días para evitar acumulación indefinida y mantenerse dentro del Free Tier de 5 GB
+5. **S3 lifecycle** — Configurado a 90 días para auto-eliminación de objetos multimedia, alineado con DynamoDB TTL. Monitorear almacenamiento en Cost Explorer
+6. **API Gateway caching** — Si uso crece, considerar habilitar caching para reducir llamadas a Lambda
+7. **Logs retention** — Configurado a 30 días para evitar acumulación indefinida y mantenerse dentro del Free Tier de 5 GB
 
 ---
 
