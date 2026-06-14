@@ -1,4 +1,4 @@
-import { describe, it, beforeEach, afterEach, mock } from "node:test";
+import { describe, it, afterEach, mock } from "node:test";
 import assert from "node:assert/strict";
 
 import { createMediaPipeline, buildS3Uri } from "../src/services/mediaPipeline.js";
