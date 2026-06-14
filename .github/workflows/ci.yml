@@ -148,7 +148,7 @@ jobs:
           # 4. Decision logic
           if [ "$STACK_STATUS" = "NOT_FOUND" ]; then
             echo "Stack does not exist. Clean deploy."
-          elif [ "$STACK_STATUS" = "CREATE_COMPLETE" ] || [ "$STACK_STATUS" = "UPDATE_COMPLETE" ]; then
+          elif [ "$STACK_STATUS" = "CREATE_COMPLETE" ] || [ "$STACK_STATUS" = "UPDATE_COMPLETE" ] || [ "$STACK_STATUS" = "ROLLBACK_COMPLETE" ] || [ "$STACK_STATUS" = "UPDATE_ROLLBACK_COMPLETE" ]; then
             if [ "$TABLE_STATUS" = "NOT_FOUND" ]; then
               echo ""
               echo " WARNING: Stack exists but DynamoDB table '\' is MISSING."
@@ -161,15 +161,6 @@ jobs:
             else
               echo "Stack and table exist. Normal update deploy."
             fi
-          elif [ "$STACK_STATUS" = "ROLLBACK_COMPLETE" ] || [ "$STACK_STATUS" = "UPDATE_ROLLBACK_COMPLETE" ]; then
-            echo ""
-            echo " ERROR: Stack is in ROLLBACK state: $STACK_STATUS"
-            echo " This means a previous deployment failed and the stack rolled back."
-            echo ""
-            echo " To recover, run:"
-            echo "   aws cloudformation continue-update-rollback --stack-name "${STACK_NAME}" --region eu-west-1"
-            echo ""
-            exit 1
           else
             echo ""
             echo " ERROR: Stack in unexpected state: $STACK_STATUS"
