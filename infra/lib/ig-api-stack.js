@@ -29,7 +29,6 @@ export class IgApiStack extends Stack {
       tableName,
       billingMode: BillingMode.PAY_PER_REQUEST,
       partitionKey: { name: "id", type: AttributeType.STRING },
-      sortKey: { name: "timestamp", type: AttributeType.STRING },
       timeToLiveAttribute: "expiresAt",
     });
 
