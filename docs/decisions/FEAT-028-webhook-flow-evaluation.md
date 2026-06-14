@@ -2,7 +2,7 @@
 
 **Fecha**: 2026-06-13
 **Estado**: Propuesta / Evaluación
-**Autor**: role-explorer
+**Autor**: explorer (perfil Hermes)
 
 ---
 

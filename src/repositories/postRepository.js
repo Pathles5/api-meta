@@ -152,6 +152,53 @@ function createPostRepository(client, options = {}) {
     return now;
   }
 
+  /**
+   * Actualiza los campos de precio extraido por Grok AI en un post.
+   * @param {string} id - Instagram post ID.
+   * @param {object} priceData - Datos de precio a guardar.
+   * @param {number|null} priceData.price - Precio numerico extraido.
+   * @param {string|null} priceData.currency - Codigo ISO de moneda (EUR, USD, etc.).
+   * @param {number} priceData.confidence - Confianza de extraccion (0.0-1.0).
+   * @returns {Promise<object|null>} Los datos de precio guardados, o null si el post no existe.
+   */
+  async function updatePostPrice(id, priceData) {
+    const post = await getPost(id);
+    if (!post) return null;
+
+    const { price, currency, confidence } = priceData;
+
+    const updateParts = [];
+    const exprValues = {};
+
+    if (price !== undefined && price !== null) {
+      updateParts.push("price = :price");
+      exprValues[":price"] = price;
+    }
+    if (currency !== undefined) {
+      updateParts.push("currency = :currency");
+      exprValues[":currency"] = currency;
+    }
+    if (confidence !== undefined) {
+      updateParts.push("priceConfidence = :confidence");
+      exprValues[":confidence"] = confidence;
+    }
+
+    if (updateParts.length === 0) {
+      return { price: null, currency: null, confidence: 0 };
+    }
+
+    await client.send(
+      new UpdateCommand({
+        TableName: tableName,
+        Key: { id, timestamp: post.timestamp },
+        UpdateExpression: `SET ${updateParts.join(", ")}`,
+        ExpressionAttributeValues: exprValues,
+      }),
+    );
+
+    return { price, currency, confidence };
+  }
+
   async function listPostsNeedingVerification(hours = 24, limit = 50) {
     const cutoff = new Date();
     cutoff.setHours(cutoff.getHours() - hours);
@@ -184,6 +231,7 @@ function createPostRepository(client, options = {}) {
     deletePost,
     savePosts,
     updateVerificationDate,
+    updatePostPrice,
     listPostsNeedingVerification,
     getTableName: () => tableName,
   };
@@ -206,6 +254,7 @@ const {
   deletePost,
   savePosts,
   updateVerificationDate,
+  updatePostPrice,
   listPostsNeedingVerification,
   getTableName,
 } = getDefaultRepository();
@@ -217,6 +266,7 @@ export {
   deletePost,
   savePosts,
   updateVerificationDate,
+  updatePostPrice,
   listPostsNeedingVerification,
   getTableName,
   createPostRepository,

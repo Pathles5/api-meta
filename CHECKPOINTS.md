@@ -7,7 +7,7 @@
 ## C1 — El arnés está completo
 - [ ] Existen los archivos base: `OPENCODE.md`, `AGENTS.md`, `init.js`, `feature_list.json`, `progress/current.md`.
 - [ ] Existen los docs de reglas: `docs/architecture.md`, `docs/conventions.md`, `docs/verification.md`.
-- [ ] Existen los skills de roles: `role-leader`, `role-explorer`, `role-implementer`, `role-reviewer`, `role-devops`, `role-documentation`.
+- [ ] Existen los perfiles de Hermes: `leader`, `explorer`, `implementer`, `reviewer`, `devops`, `documentation`.
 - [ ] El comando `node init.js` termina con exit code 0 (sin errores críticos).
 
 ## C2 — El estado es coherente
@@ -27,6 +27,7 @@
 - [ ] Los tests utilizan el patrón de **Inyección de Dependencias** (Factories) para mockear repositorios o APIs externas, evitando mocks frágiles del sistema de archivos o módulos.
 - [ ] El comando `pnpm test` muestra > 0 tests ejecutados y todos en verde.
 - [ ] *(Si aplica)* Cambios en `infra/` validados: sintaxis JS correcta y `cdk synth` se ejecutará en CI/CD (no se ejecuta cdk desde local).
+- [ ] **Cobertura de tests obligatoria**: Cada tarea de desarrollo (feature, evolución, fix) tiene una tarea de test dependiente en kanban. Verificar con `hermes kanban list` que las tareas de implementer tienen tareas de test enlazadas (parents/children).
 
 ## C5 — La sesión se cerró correctamente
 - [ ] No hay archivos sin trackear sospechosos en git (ej: `.env` real, `*.tmp`, `cdk.out` si está en `.gitignore`).

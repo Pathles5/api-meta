@@ -15,6 +15,10 @@ export default [
         URL: "readonly",
         Buffer: "readonly",
         fetch: "readonly",
+        AbortController: "readonly",
+        ReadableStream: "readonly",
+        TextEncoder: "readonly",
+        TextDecoder: "readonly",
       },
     },
     rules: {

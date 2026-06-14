@@ -1,5 +1,5 @@
-import { performTokenRefresh } from "../src/services/metaTokenRefresh.js";
-import { logger } from "../src/utils/logger.js";
+import { performTokenRefresh } from "../services/metaTokenRefresh.js";
+import { logger } from "../utils/logger.js";
 
 /**
  * Lambda handler para refresh automático del token de Meta

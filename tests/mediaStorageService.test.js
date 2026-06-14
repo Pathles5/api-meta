@@ -1,10 +1,14 @@
 import { describe, it, beforeEach, afterEach, mock } from "node:test";
 import assert from "node:assert/strict";
+import { writeFileSync, existsSync, mkdirSync } from "fs";
+import { join } from "path";
+import { tmpdir } from "os";
 
 import {
   inferContentType,
   extractFilename,
   buildS3Key,
+  cleanupTempFiles,
   createMediaStorageService,
 } from "../src/services/mediaStorageService.js";
 
@@ -21,7 +25,7 @@ describe("mediaStorageService", () => {
     mock.reset();
   });
 
-  // ── inferContentType ──
+  // -- inferContentType --
 
   describe("inferContentType", () => {
     it("should return image/jpeg for .jpg URLs", () => {
@@ -88,7 +92,7 @@ describe("mediaStorageService", () => {
     });
   });
 
-  // ── extractFilename ──
+  // -- extractFilename --
 
   describe("extractFilename", () => {
     it("should extract filename from a simple URL", () => {
@@ -125,25 +129,101 @@ describe("mediaStorageService", () => {
     });
   });
 
-  // ── buildS3Key ──
+  // -- buildS3Key --
 
   describe("buildS3Key", () => {
-    it("should build key in format media/{postId}/{filename}", () => {
+    it("should build key in format instagram/{postId}/{mediaType}/{filename}", () => {
       assert.equal(
-        buildS3Key("123456", "photo.jpg"),
-        "media/123456/photo.jpg",
+        buildS3Key("123456", "IMAGE", "photo.jpg"),
+        "instagram/123456/IMAGE/photo.jpg",
       );
     });
 
-    it("should handle post IDs with special characters", () => {
+    it("should handle VIDEO media type", () => {
       assert.equal(
-        buildS3Key("post_abc-123", "video.mp4"),
-        "media/post_abc-123/video.mp4",
+        buildS3Key("post_abc-123", "VIDEO", "video.mp4"),
+        "instagram/post_abc-123/VIDEO/video.mp4",
+      );
+    });
+
+    it("should handle CAROUSEL_ALBUM media type", () => {
+      assert.equal(
+        buildS3Key("carousel1", "CAROUSEL_ALBUM", "slide1.jpg"),
+        "instagram/carousel1/CAROUSEL_ALBUM/slide1.jpg",
+      );
+    });
+
+    it("should handle THUMBNAIL media type", () => {
+      assert.equal(
+        buildS3Key("vid1", "THUMBNAIL", "thumb.jpg"),
+        "instagram/vid1/THUMBNAIL/thumb.jpg",
+      );
+    });
+
+    it("should normalize mediaType to uppercase", () => {
+      assert.equal(
+        buildS3Key("123", "image", "photo.jpg"),
+        "instagram/123/IMAGE/photo.jpg",
+      );
+    });
+
+    it("should use UNKNOWN when mediaType is null", () => {
+      assert.equal(
+        buildS3Key("123", null, "photo.jpg"),
+        "instagram/123/UNKNOWN/photo.jpg",
       );
     });
   });
 
-  // ── createMediaStorageService ──
+  // -- cleanupTempFiles --
+
+  describe("cleanupTempFiles", () => {
+    it("should delete a single existing file", async () => {
+      const dir = join(tmpdir(), "cleanup_test_" + Date.now());
+      mkdirSync(dir, { recursive: true });
+      const filePath = join(dir, "temp.txt");
+      writeFileSync(filePath, "hello");
+
+      const result = await cleanupTempFiles(filePath);
+      assert.equal(result.deleted.length, 1);
+      assert.equal(result.deleted[0], filePath);
+      assert.equal(result.failed.length, 0);
+      assert.equal(existsSync(filePath), false);
+    });
+
+    it("should delete multiple files", async () => {
+      const dir = join(tmpdir(), "cleanup_multi_" + Date.now());
+      mkdirSync(dir, { recursive: true });
+      const file1 = join(dir, "a.txt");
+      const file2 = join(dir, "b.txt");
+      writeFileSync(file1, "aaa");
+      writeFileSync(file2, "bbb");
+
+      const result = await cleanupTempFiles([file1, file2]);
+      assert.equal(result.deleted.length, 2);
+      assert.equal(result.failed.length, 0);
+    });
+
+    it("should silently ignore ENOENT for already-deleted files", async () => {
+      const result = await cleanupTempFiles("/nonexistent/path/file.txt");
+      assert.equal(result.deleted.length, 0);
+      assert.equal(result.failed.length, 0);
+    });
+
+    it("should handle empty array", async () => {
+      const result = await cleanupTempFiles([]);
+      assert.equal(result.deleted.length, 0);
+      assert.equal(result.failed.length, 0);
+    });
+
+    it("should skip null/undefined paths", async () => {
+      const result = await cleanupTempFiles([null, undefined, ""]);
+      assert.equal(result.deleted.length, 0);
+      assert.equal(result.failed.length, 0);
+    });
+  });
+
+  // -- createMediaStorageService --
 
   describe("createMediaStorageService", () => {
     it("should throw if S3_BUCKET_NAME is not configured", () => {
@@ -171,9 +251,242 @@ describe("mediaStorageService", () => {
       const service = createMediaStorageService({ s3Client: {} });
       assert.equal(service.getBucketName(), "test-media-bucket");
     });
+
+    it("should expose uploadBuffer, uploadFile, storeMedia, storePostMedia", () => {
+      const service = createMediaStorageService({
+        s3Client: {},
+        bucketName: "test-bucket",
+      });
+      assert.equal(typeof service.uploadBuffer, "function");
+      assert.equal(typeof service.uploadFile, "function");
+      assert.equal(typeof service.storeMedia, "function");
+      assert.equal(typeof service.storePostMedia, "function");
+    });
   });
 
-  // ── storeMedia ──
+  // -- uploadBuffer --
+
+  describe("uploadBuffer", () => {
+    it("should throw 400 if postId is missing", async () => {
+      const mockS3 = { send: mock.fn() };
+      const service = createMediaStorageService({
+        s3Client: mockS3,
+        bucketName: "test-bucket",
+      });
+
+      await assert.rejects(
+        () => service.uploadBuffer(null, "IMAGE", Buffer.from([1, 2, 3])),
+        (err) => {
+          assert.equal(err.statusCode, 400);
+          assert.ok(err.message.includes("postId"));
+          return true;
+        },
+      );
+    });
+
+    it("should throw 400 if mediaType is missing", async () => {
+      const mockS3 = { send: mock.fn() };
+      const service = createMediaStorageService({
+        s3Client: mockS3,
+        bucketName: "test-bucket",
+      });
+
+      await assert.rejects(
+        () => service.uploadBuffer("123", null, Buffer.from([1, 2, 3])),
+        (err) => {
+          assert.equal(err.statusCode, 400);
+          assert.ok(err.message.includes("mediaType"));
+          return true;
+        },
+      );
+    });
+
+    it("should throw 400 if buffer is empty", async () => {
+      const mockS3 = { send: mock.fn() };
+      const service = createMediaStorageService({
+        s3Client: mockS3,
+        bucketName: "test-bucket",
+      });
+
+      await assert.rejects(
+        () => service.uploadBuffer("123", "IMAGE", Buffer.alloc(0)),
+        (err) => {
+          assert.equal(err.statusCode, 400);
+          return true;
+        },
+      );
+    });
+
+    it("should upload buffer to S3 with correct key format and metadata", async () => {
+      const sentCommands = [];
+      const mockS3 = {
+        send: mock.fn(async (cmd) => {
+          sentCommands.push(cmd);
+        }),
+      };
+
+      const service = createMediaStorageService({
+        s3Client: mockS3,
+        bucketName: "test-bucket",
+      });
+
+      const buf = Buffer.from([1, 2, 3, 4, 5]);
+      const result = await service.uploadBuffer("post123", "IMAGE", buf, {
+        filename: "photo.jpg",
+        sourceUrl: "https://instagram.com/photo.jpg",
+      });
+
+      assert.equal(result.bucket, "test-bucket");
+      assert.equal(result.key, "instagram/post123/IMAGE/photo.jpg");
+      assert.equal(result.contentType, "image/jpeg");
+      assert.equal(result.size, 5);
+      assert.equal(mockS3.send.mock.callCount(), 1);
+
+      // Verify metadata was passed
+      const cmd = sentCommands[0];
+      assert.equal(cmd.input.Metadata.postid, "post123");
+      assert.equal(cmd.input.Metadata.mediatype, "IMAGE");
+      assert.ok(cmd.input.Metadata.uploadedat);
+      assert.equal(cmd.input.Metadata.sourceurl, "https://instagram.com/photo.jpg");
+    });
+
+    it("should infer content type from filename", async () => {
+      const mockS3 = { send: mock.fn() };
+      const service = createMediaStorageService({
+        s3Client: mockS3,
+        bucketName: "test-bucket",
+      });
+
+      const result = await service.uploadBuffer("p1", "VIDEO", Buffer.from([1]), {
+        filename: "clip.mp4",
+      });
+      assert.equal(result.contentType, "video/mp4");
+    });
+  });
+
+  // -- uploadFile --
+
+  describe("uploadFile", () => {
+    it("should throw 400 if postId is missing", async () => {
+      const mockS3 = { send: mock.fn() };
+      const service = createMediaStorageService({
+        s3Client: mockS3,
+        bucketName: "test-bucket",
+      });
+
+      await assert.rejects(
+        () => service.uploadFile(null, "IMAGE", "/tmp/file.jpg"),
+        (err) => {
+          assert.equal(err.statusCode, 400);
+          return true;
+        },
+      );
+    });
+
+    it("should throw 400 if filePath is missing", async () => {
+      const mockS3 = { send: mock.fn() };
+      const service = createMediaStorageService({
+        s3Client: mockS3,
+        bucketName: "test-bucket",
+      });
+
+      await assert.rejects(
+        () => service.uploadFile("123", "IMAGE", null),
+        (err) => {
+          assert.equal(err.statusCode, 400);
+          return true;
+        },
+      );
+    });
+
+    it("should upload file and cleanup temp file on success", async () => {
+      const dir = join(tmpdir(), "upload_test_" + Date.now());
+      mkdirSync(dir, { recursive: true });
+      const filePath = join(dir, "photo.jpg");
+      writeFileSync(filePath, Buffer.from([10, 20, 30, 40, 50]));
+
+      const mockS3 = { send: mock.fn() };
+      const service = createMediaStorageService({
+        s3Client: mockS3,
+        bucketName: "test-bucket",
+      });
+
+      const result = await service.uploadFile("post1", "IMAGE", filePath);
+
+      assert.equal(result.key, "instagram/post1/IMAGE/photo.jpg");
+      assert.equal(result.bucket, "test-bucket");
+      assert.equal(result.contentType, "image/jpeg");
+      assert.equal(result.size, 5);
+      assert.equal(result.cleanup.deleted.length, 1);
+      assert.equal(result.cleanup.deleted[0], filePath);
+      assert.equal(existsSync(filePath), false);
+      assert.equal(mockS3.send.mock.callCount(), 1);
+    });
+
+    it("should cleanup temp file even when upload fails", async () => {
+      const dir = join(tmpdir(), "upload_fail_" + Date.now());
+      mkdirSync(dir, { recursive: true });
+      const filePath = join(dir, "video.mp4");
+      writeFileSync(filePath, Buffer.from([1, 2, 3]));
+
+      const mockS3 = {
+        send: mock.fn(async () => {
+          throw new Error("S3 error");
+        }),
+      };
+      const service = createMediaStorageService({
+        s3Client: mockS3,
+        bucketName: "test-bucket",
+      });
+
+      await assert.rejects(
+        () => service.uploadFile("post2", "VIDEO", filePath),
+        /S3 error/,
+      );
+
+      // File should still be cleaned up despite upload failure
+      assert.equal(existsSync(filePath), false);
+    });
+
+    it("should skip cleanup when cleanup=false", async () => {
+      const dir = join(tmpdir(), "upload_noclean_" + Date.now());
+      mkdirSync(dir, { recursive: true });
+      const filePath = join(dir, "photo.jpg");
+      writeFileSync(filePath, Buffer.from([1, 2]));
+
+      const mockS3 = { send: mock.fn() };
+      const service = createMediaStorageService({
+        s3Client: mockS3,
+        bucketName: "test-bucket",
+      });
+
+      const result = await service.uploadFile("p3", "IMAGE", filePath, {
+        cleanup: false,
+      });
+
+      assert.equal(result.cleanup.deleted.length, 0);
+      assert.equal(existsSync(filePath), true);
+    });
+
+    it("should throw 404 for non-existent file", async () => {
+      const mockS3 = { send: mock.fn() };
+      const service = createMediaStorageService({
+        s3Client: mockS3,
+        bucketName: "test-bucket",
+      });
+
+      await assert.rejects(
+        () => service.uploadFile("p4", "IMAGE", "/nonexistent/file.jpg"),
+        (err) => {
+          assert.equal(err.statusCode, 404);
+          assert.ok(err.message.includes("File not found"));
+          return true;
+        },
+      );
+    });
+  });
+
+  // -- storeMedia --
 
   describe("storeMedia", () => {
     it("should throw 400 if postId is missing", async () => {
@@ -184,10 +497,9 @@ describe("mediaStorageService", () => {
       });
 
       await assert.rejects(
-        () => service.storeMedia(null, "https://example.com/photo.jpg"),
+        () => service.storeMedia(null, "IMAGE", "https://example.com/photo.jpg"),
         (err) => {
           assert.equal(err.statusCode, 400);
-          assert.ok(err.message.includes("postId"));
           return true;
         },
       );
@@ -201,24 +513,32 @@ describe("mediaStorageService", () => {
       });
 
       await assert.rejects(
-        () => service.storeMedia("123", null),
+        () => service.storeMedia("123", "IMAGE", null),
         (err) => {
           assert.equal(err.statusCode, 400);
-          assert.ok(err.message.includes("mediaUrl"));
           return true;
         },
       );
     });
 
-    it("should download media and upload to S3", async () => {
-      const sentCommands = [];
-      const mockS3 = {
-        send: mock.fn(async (cmd) => {
-          sentCommands.push(cmd);
-        }),
-      };
+    it("should throw 400 if mediaType is missing", async () => {
+      const mockS3 = { send: mock.fn() };
+      const service = createMediaStorageService({
+        s3Client: mockS3,
+        bucketName: "test-bucket",
+      });
 
-      // Mock fetch for downloading
+      await assert.rejects(
+        () => service.storeMedia("123", null, "https://example.com/photo.jpg"),
+        (err) => {
+          assert.equal(err.statusCode, 400);
+          return true;
+        },
+      );
+    });
+
+    it("should download media and upload to S3 with correct key", async () => {
+      const mockS3 = { send: mock.fn() };
       const originalFetch = globalThis.fetch;
       const fakeData = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
       globalThis.fetch = async () => ({
@@ -238,11 +558,12 @@ describe("mediaStorageService", () => {
 
         const result = await service.storeMedia(
           "post123",
+          "IMAGE",
           "https://instagram.com/images/photo.jpg",
         );
 
         assert.equal(result.bucket, "test-bucket");
-        assert.equal(result.key, "media/post123/photo.jpg");
+        assert.equal(result.key, "instagram/post123/IMAGE/photo.jpg");
         assert.equal(result.contentType, "image/jpeg");
         assert.equal(result.size, 10);
         assert.equal(mockS3.send.mock.callCount(), 1);
@@ -266,7 +587,7 @@ describe("mediaStorageService", () => {
         });
 
         await assert.rejects(
-          () => service.storeMedia("post123", "https://example.com/missing.jpg"),
+          () => service.storeMedia("post123", "IMAGE", "https://example.com/missing.jpg"),
           (err) => {
             assert.equal(err.statusCode, 502);
             assert.ok(err.message.includes("Failed to download"));
@@ -295,17 +616,19 @@ describe("mediaStorageService", () => {
 
         const result = await service.storeMedia(
           "post456",
+          "VIDEO",
           "https://example.com/video.mp4",
         );
 
         assert.equal(result.contentType, "video/mp4");
+        assert.equal(result.key, "instagram/post456/VIDEO/video.mp4");
       } finally {
         globalThis.fetch = originalFetch;
       }
     });
   });
 
-  // ── storePostMedia ──
+  // -- storePostMedia --
 
   describe("storePostMedia", () => {
     it("should throw 400 if post is null", async () => {
@@ -340,7 +663,7 @@ describe("mediaStorageService", () => {
       );
     });
 
-    it("should store single IMAGE post", async () => {
+    it("should store single IMAGE post with correct key", async () => {
       const mockS3 = { send: mock.fn() };
       const originalFetch = globalThis.fetch;
       globalThis.fetch = async () => ({
@@ -362,13 +685,13 @@ describe("mediaStorageService", () => {
         });
 
         assert.equal(results.length, 1);
-        assert.equal(results[0].key, "media/img-post-1/photo.jpg");
+        assert.equal(results[0].key, "instagram/img-post-1/IMAGE/photo.jpg");
       } finally {
         globalThis.fetch = originalFetch;
       }
     });
 
-    it("should store VIDEO post with thumbnail", async () => {
+    it("should store VIDEO with thumbnail using THUMBNAIL mediaType", async () => {
       const mockS3 = { send: mock.fn() };
       const originalFetch = globalThis.fetch;
       globalThis.fetch = async () => ({
@@ -390,11 +713,10 @@ describe("mediaStorageService", () => {
           thumbnailUrl: "https://example.com/thumb.jpg",
         });
 
-        // Should store both video and thumbnail
         assert.equal(results.length, 2);
         const keys = results.map((r) => r.key);
-        assert.ok(keys.includes("media/vid-post-1/video.mp4"));
-        assert.ok(keys.includes("media/vid-post-1/thumb.jpg"));
+        assert.ok(keys.includes("instagram/vid-post-1/VIDEO/video.mp4"));
+        assert.ok(keys.includes("instagram/vid-post-1/THUMBNAIL/thumb.jpg"));
       } finally {
         globalThis.fetch = originalFetch;
       }
@@ -427,9 +749,9 @@ describe("mediaStorageService", () => {
         });
 
         assert.equal(results.length, 3);
-        assert.equal(results[0].key, "media/carousel-1/slide1.jpg");
-        assert.equal(results[1].key, "media/carousel-1/slide2.jpg");
-        assert.equal(results[2].key, "media/carousel-1/slide3.jpg");
+        assert.equal(results[0].key, "instagram/carousel-1/CAROUSEL_ALBUM/slide1.jpg");
+        assert.equal(results[1].key, "instagram/carousel-1/CAROUSEL_ALBUM/slide2.jpg");
+        assert.equal(results[2].key, "instagram/carousel-1/CAROUSEL_ALBUM/slide3.jpg");
       } finally {
         globalThis.fetch = originalFetch;
       }

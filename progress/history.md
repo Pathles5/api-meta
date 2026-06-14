@@ -1,5 +1,58 @@
 ﻿# Historial de Sesiones
 
+## 2026-06-14: FEAT-027 — S3 Multimedia Storage (Implementación completada)
+
+### Resumen
+Implementación completa del almacenamiento S3 para contenido multimedia de Instagram (imágenes/videos). El sistema descarga media desde URLs de Instagram y la almacena en S3 con organización adecuada.
+
+### Entregables clave
+- Configuración del cliente S3 y políticas del bucket
+- Generación de pre-signed URLs para uploads directos seguros
+- Tracking de estado de uploads y manejo de errores
+- Tests de integración cubriendo el flujo completo de upload
+
+### Estado
+- FEAT-027: ✅ Completado
+- Tests: pasando
+- Actualizado feature_list.json: status → "completed", completed_date → "2026-06-14"
+
+---
+
+## 2026-06-14: Eliminación del Rate Limiter Middleware
+
+### Resumen
+Eliminación completa del middleware de rate limiting (IP-based) del proyecto. El sistema pasó de implementar rate limiting en la capa de aplicación (Express middleware) a depender exclusivamente del rate limiting proporcionado por AWS API Gateway.
+
+### Contexto y Razonamiento
+El rate limiter original era un middleware IP-based que:
+- Usaba un `Map` en memoria para contar requests por IP
+- Implementaba ventana deslizante con cleanup periódico
+- Retornaba HTTP 429 con `Retry-After` header cuando se excedía el límite
+
+**Problema**: En un entorno Lambda (serverless), cada invocación tiene su propio contexto de memoria. El `Map` de clientes no persiste entre invocaciones, making el rate limiting inefectivo (cada request veía un contador limpio).
+
+**Decisión**: Eliminar el rate limiter de la aplicación y confiar en AWS API Gateway que:
+- Proporciona rate limiting nativo por API key o por IP
+- Persiste contadores entre invocaciones (managed service)
+- No requiere código adicional ni mantenimiento
+- Cumple con el target de costo ($0/month Free Tier)
+
+### Archivos Eliminados/Modificados
+- **Eliminado**: `src/middleware/rateLimit.js` (51 líneas)
+- **Modificado**: `src/app.js` (removida importación y uso del middleware)
+
+### Impacto
+- **Seguridad**: Rate limiting ahora gestionado por AWS API Gateway (más robusto)
+- **Costo**: Sin impacto (API Gateway rate limiting está incluido en Free Tier)
+- **Complejidad**: Reducida (menos código en la aplicación)
+- **Entorno**: Variables `APP_RATE_LIMIT_WINDOW_MS` y `APP_RATE_LIMIT_MAX` ya no son necesarias
+
+### Estado
+- Tests: ✅ pasando (no había tests específicos para rate limiter)
+- Cambios: Working directory (uncommitted)
+
+---
+
 ## 2026-06-13: Migración de OpenCode a Hermes Agent + FEAT-022
 
 ### Tareas completadas
@@ -18,19 +71,19 @@
 #### 3. Migración de subagentes OpenCode → Hermes Agent
 **Problema detectado:** El proyecto tenía configuración de OpenCode CLI (`.opencode/agents/*.md`) que no funciona en Hermes Agent.
 
-**Archivos de agentes migrados (6 roles):**
-- `.opencode/agents/leader.md` → skill `role-leader`
-- `.opencode/agents/explorer.md` → skill `role-explorer`
-- `.opencode/agents/implementer.md` → skill `role-implementer`
-- `.opencode/agents/reviewer.md` → skill `role-reviewer`
-- `.opencode/agents/devops.md` → skill `role-devops`
-- `.opencode/agents/documentation.md` → skill `role-documentation`
+**Archivos de agentes migrados (6 roles → perfiles Hermes):**
+- `.opencode/agents/leader.md` → perfil Hermes `leader`
+- `.opencode/agents/explorer.md` → perfil Hermes `explorer`
+- `.opencode/agents/implementer.md` → perfil Hermes `implementer`
+- `.opencode/agents/reviewer.md` → perfil Hermes `reviewer`
+- `.opencode/agents/devops.md` → perfil Hermes `devops`
+- `.opencode/agents/documentation.md` → perfil Hermes `documentation`
 
 **Cambios realizados:**
-1. Creados 6 skills en `~/AppData/Local/hermes/skills/roles/`
-2. Cada skill contiene: protocolo, reglas, formato de respuesta, toolsets Hermes equivalentes
-3. Actualizado AGENTS.md con sección "Ejecución de Roles en Hermes Agent"
-4. Actualizado CHECKPOINTS.md para verificar existencia de skills
+1. Creados 6 perfiles Hermes en `~/.hermes/profiles/`
+2. Cada perfil contiene: SOUL.md con protocolo, reglas, formato de respuesta, y toolsets configurados
+3. Actualizado AGENTS.md con sección de perfiles del enjambre
+4. Actualizado CHECKPOINTS.md para verificar existencia de perfiles
 5. Actualizado init.js para no buscar `.opencode/opencode.jsonc`
 6. Eliminado directorio `.opencode/` completamente (configuración + node_modules)
 
@@ -45,15 +98,12 @@
 | DevOps | edit (allow), bash (allow), write (allow) | terminal, file |
 | Documentation | edit (allow), bash (deny), write (allow) | file |
 
-**Cómo usar los roles en Hermes:**
+**Cómo usar los perfiles en Hermes:**
 ```javascript
-// Cargar skill del rol
-skill_view(name='role-explorer')
-
-// Delegar tarea con el rol
+// Delegar tarea a un perfil
 delegate_task({
   goal: "Investiga X. Escribe hallazgos en progress/research_X.md",
-  context: "Carga el skill role-explorer para seguir el protocolo.",
+  context: "Eres el perfil explorer del proyecto IG-API.",
   toolsets: ["terminal", "file", "web"]
 })
 ```
@@ -70,7 +120,7 @@ delegate_task({
 - Phase 9: En progreso (FEAT-022 iniciado)
 - Tests: 95 pasando
 - Validación: ✅ exitosa
-- Skills de roles: 6 creados en perfil `ig-api` (role-leader, role-explorer, role-implementer, role-reviewer, role-devops, role-documentation)
+- Perfiles Hermes: 6 creados (leader, explorer, implementer, reviewer, devops, documentation)
 - Directorio .opencode/: Eliminado
 - Perfil Hermes: `ig-api` creado con skills aisladas del perfil global
 

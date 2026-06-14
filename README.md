@@ -40,7 +40,7 @@ REST API for integrating with Meta's Instagram API to retrieve posts and handle 
 ```
 src/
 ├── config/             # AWS/DynamoDB client configuration
-├── middleware/          # Express middleware (auth, cors, errorHandler, rateLimit, requestLogger)
+├── middleware/          # Express middleware (auth, cors, errorHandler, requestLogger)
 ├── repositories/       # Data access layer (postRepository)
 ├── routes/             # Route handlers (health, posts)
 ├── services/           # Business logic (metaApi, postVerification)
@@ -59,7 +59,7 @@ docs/                   # Documentation and decisions
 
 ## Environment Variables
 
-El proyecto utiliza **16 variables de entorno** organizadas por categoría. **4 son obligatorias** y **12 son opcionales**.
+El proyecto utiliza **17 variables de entorno** organizadas por categoría. **4 son obligatorias** y **13 son opcionales**.
 
 ### Variables de Entorno - Tabla Completa
 
@@ -76,6 +76,7 @@ El proyecto utiliza **16 variables de entorno** organizadas por categoría. **4 
 | `APP_RATE_LIMIT_MAX` | APP | ❌ No | Máximo de requests por ventana | `100` | `100` |
 | `APP_LOG_LEVEL` | APP | ❌ No | Nivel de log | `info` | `debug` |
 | `AWS_REGION` | AWS | ❌ No | Región de AWS | `eu-west-1` | `eu-west-1` |
+| `S3_BUCKET_NAME` | AWS/S3 | ❌ No | Nombre del bucket S3 para almacenamiento de media. En AWS se establece automáticamente por CDK (`ig-api-{env}-media-{env}`). Solo necesario en local si usas S3 real. | — | `ig-api-pre-media-pre` |
 | `DYNAMODB_ENDPOINT` | DYNAMODB | ❌ No | Endpoint de DynamoDB | `http://localhost:8000` | `http://localhost:8000` |
 | `DYNAMODB_TABLE_NAME` | DYNAMODB | ❌ No | Nombre de la tabla DynamoDB | `ig-posts` | `ig-posts-pre` |
 | `DYNAMODB_POST_TTL_DAYS` | DYNAMODB | ❌ No | TTL de posts en días | `90` | `90` |
@@ -125,8 +126,9 @@ Con `IG_ENV`, que se obtiene automáticamente del nombre de la branch en CI/CD:
 - **`APP_RATE_LIMIT_MAX`**: Máximo de requests permitidos por ventana
 - **`APP_LOG_LEVEL`**: Nivel de log (`fatal`, `error`, `warn`, `info`, `debug`, `trace`)
 
-#### ☁️ AWS (1 variable)
+#### ☁️ AWS (2 variables)
 - **`AWS_REGION`**: Región de AWS donde se despliega (default: `eu-west-1` - Irlanda)
+- **`S3_BUCKET_NAME`**: Nombre del bucket S3 para almacenamiento de media (images/videos de Instagram). En AWS se establece automáticamente por CDK (`ig-api-{env}-media-{env}`). Para desarrollo local con S3 real, configúralo manualmente.
 
 #### 🗄️ DYNAMODB (3 variables)
 - **`DYNAMODB_ENDPOINT`**: Endpoint de DynamoDB. En local usa `http://localhost:8000`, en AWS se ignora
@@ -158,8 +160,9 @@ APP_RATE_LIMIT_WINDOW_MS=60000
 APP_RATE_LIMIT_MAX=100
 APP_LOG_LEVEL=info
 
-# ☁️ AWS (Opcional)
+# ☁️ AWS (Opcionales)
 AWS_REGION=eu-west-1
+# S3_BUCKET_NAME=ig-api-pre-media-pre  # Solo necesario en local con S3 real
 
 # 🗄️ DYNAMODB (Opcionales - solo para desarrollo local)
 DYNAMODB_ENDPOINT=http://localhost:8000

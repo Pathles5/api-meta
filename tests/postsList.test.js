@@ -1,6 +1,5 @@
 import { describe, it, before, after, beforeEach, afterEach, mock } from "node:test";
 import assert from "node:assert/strict";
-import { stopCleanup } from "../src/middleware/rateLimit.js";
 
 const originalEnv = process.env;
 const originalFetch = globalThis.fetch;
@@ -45,13 +44,11 @@ before(async () => {
   const { healthRouter } = await import("../src/routes/health.js");
   const { errorHandler } = await import("../src/middleware/errorHandler.js");
   const { cors } = await import("../src/middleware/cors.js");
-  const { rateLimit } = await import("../src/middleware/rateLimit.js");
   const { requestLogger } = await import("../src/middleware/requestLogger.js");
   const { authenticate } = await import("../src/middleware/authenticate.js");
 
   const testApp = express.default();
   testApp.use(cors());
-  testApp.use(rateLimit());
   testApp.use(express.default.json());
   testApp.use(requestLogger);
   testApp.use(healthRouter);
@@ -69,7 +66,6 @@ before(async () => {
 after(async () => {
   process.env = originalEnv;
   globalThis.fetch = originalFetch;
-  stopCleanup();
   if (server) {
     await new Promise((resolve) => server.close(resolve));
   }
@@ -227,7 +223,6 @@ describe("GET /posts/list", () => {
     });
 
     const response = await apiFetch("/posts/list");
-    const body = await response.json();
 
     assert.equal(response.status, 500);
   });

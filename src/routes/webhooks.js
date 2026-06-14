@@ -2,18 +2,28 @@ import { Router } from "express";
 import { logger } from "../utils/logger.js";
 import { createWebhookProcessor } from "../services/webhookProcessor.js";
 import { verifyMetaSignature } from "../middleware/verifyMetaSignature.js";
+import * as postRepository from "../repositories/postRepository.js";
+import * as metaApi from "../services/metaApi.js";
+import { createPriceExtractor } from "../services/priceExtractor.js";
 
 /**
  * Creates the webhooks router with GET (subscription verification) and
  * POST (event reception) endpoints for Meta / Instagram webhooks.
  *
  * @param {{ processEvent: Function }} [processor] - Webhook event processor.
- *   Defaults to a new `createWebhookProcessor()` instance.
+ *   Defaults to a new `createWebhookProcessor()` instance with real dependencies
+ *   (postRepository, metaApi, priceExtractor).
  * @returns {import("express").Router}
  */
 function createWebhooksRouter(processor) {
   const router = Router();
-  const eventProcessor = processor || createWebhookProcessor();
+  const eventProcessor =
+    processor ||
+    createWebhookProcessor({
+      repo: postRepository,
+      metaApi,
+      priceExtractor: createPriceExtractor(),
+    });
 
   /**
    * GET /webhooks — Meta subscription challenge-response.
@@ -53,7 +63,7 @@ function createWebhooksRouter(processor) {
    * We always respond 200 to Meta (even on processing errors) to prevent
    * unnecessary retries.
    */
-  router.post("/", verifyMetaSignature(), (req, res) => {
+  router.post("/", verifyMetaSignature(), async (req, res) => {
     let payload;
 
     try {
@@ -69,7 +79,7 @@ function createWebhooksRouter(processor) {
     }
 
     try {
-      const result = eventProcessor.processEvent(payload);
+      const result = await eventProcessor.processEvent(payload);
       logger.info({ result }, "Webhook events processed");
     } catch (err) {
       logger.error({ err }, "Error processing webhook event");

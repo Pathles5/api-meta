@@ -1,4 +1,4 @@
-# AGENTS.md - Roles y Orquestación del Enjambre
+# AGENTS.md - Perfiles y Orquestación del Enjambre
 
 ## 🎯 Objetivo del Sistema
 Este proyecto es un entorno de aprendizaje para Hermes Agent y desarrollo asistido por IA. 
@@ -40,7 +40,7 @@ El proyecto usa múltiples entornos con stacks CDK independientes:
 
 ---
 
-## 🐜 Definición de Roles del Enjambre
+## 🐜 Definición de Perfiles del Enjambre
 
 ### 🧠 1. Leader Agent (Orquestador)
 **Responsabilidad principal**: Planificación, gestión de estado y toma de decisiones de alto nivel.
@@ -87,6 +87,7 @@ El proyecto usa múltiples entornos con stacks CDK independientes:
 - **Filosofía**: Código simple, legible y mantenible. Funciones pequeñas con JSDoc útil.
 - **Stack**: Node.js 22, **PNPM** (nunca NPM/YARN), rutas relativas.
 - **Regla de Oro**: Modifica los archivos reales directamente. No realices refactoring no solicitado. Si necesitas una dependencia, justifica por qué Node.js nativo no es suficiente.
+- **Regla de Tests**: Cada tarea de desarrollo (feature, evolución, fix) DEBE generar automáticamente una tarea de test dependiente. El Implementer NO marca la tarea como completa hasta que las pruebas estén implementadas o hasta que se haya creado la tarea de test correspondiente asignada al perfil adecuado.
 
 ### 🔎 4. Reviewer Agent (Auditor de Calidad y Seguridad)
 **Responsabilidad principal**: Validar que el trabajo del Implementer cumple con los estándares antes de darlo por terminado.
@@ -112,13 +113,13 @@ El proyecto usa múltiples entornos con stacks CDK independientes:
 
 ---
 
-## 🤖 Ejecución de Roles en Hermes Agent
+## 🤖 Ejecución de Perfiles en Hermes Agent
 
-Los roles definidos anteriormente se ejecutan en Hermes Agent mediante **skills** y **delegate_task**.
+Los perfiles definidos anteriormente se ejecutan en Hermes Agent mediante **perfiles separados** y **delegate_task**.
 
 ### Perfil del Proyecto
 
-Este proyecto usa un perfil específico de Hermes Agent llamado `ig-api` que contiene las skills de roles aisladas del perfil global.
+Este proyecto usa un perfil específico de Hermes Agent llamado `ig-api` que contiene los perfiles de agente aislados del perfil global.
 
 **Activar perfil:**
 ```bash
@@ -132,29 +133,31 @@ hermes profile use ig-api
 ig-api chat
 ```
 
-### Skills de Roles
+### Perfiles de Agente
 
-Cada rol tiene un skill asociado en el perfil `ig-api` (`~/AppData/Local/hermes/profiles/ig-api/skills/roles/`):
+Cada perfil de agente es un perfil de Hermes Agent separado con su propia configuración:
 
-| Rol | Skill | Toolsets Hermes | Equivalente OpenCode |
-|-----|-------|-----------------|---------------------|
-| Leader | `role-leader` | terminal, file | task (allow) |
-| Explorer | `role-explorer` | terminal, file, web | bash (allow), edit (deny) |
-| Implementer | `role-implementer` | terminal, file, coding | bash (allow), edit (allow) |
-| Reviewer | `role-reviewer` | terminal, file | bash (lint/test), edit (allow) |
-| DevOps | `role-devops` | terminal, file | bash (allow), edit (allow) |
-| Documentation | `role-documentation` | file | bash (deny), edit (allow) |
+| Perfil | Ubicación | Toolsets Hermes | Equivalente OpenCode |
+|--------|-----------|-----------------|----------------------|
+| Leader | `~/AppData/Local/hermes/profiles/leader/` | terminal, file | task (allow) |
+| Explorer | `~/AppData/Local/hermes/profiles/explorer/` | terminal, file, web | bash (allow), edit (deny) |
+| Implementer | `~/AppData/Local/hermes/profiles/implementer/` | terminal, file, coding | bash (allow), edit (allow) |
+| Reviewer | `~/AppData/Local/hermes/profiles/reviewer/` | terminal, file | bash (lint/test), edit (allow) |
+| DevOps | `~/AppData/Local/hermes/profiles/devops/` | terminal, file | bash (allow), edit (allow) |
+| Documentation | `~/AppData/Local/hermes/profiles/documentation/` | file | bash (deny), edit (allow) |
 
-### Cómo cargar un skill de rol
+### Cómo usar un perfil de agente
 
-Antes de delegar una tarea, carga el skill del rol correspondiente:
+Para delegar tareas, usa el perfil de Hermes Agent correspondiente:
 
 ```javascript
-// Cargar skill del rol
-skill_view(name='role-explorer')
+// Ejemplo: Delegar al Explorer para investigar
+const result = await delegate_task({
+  goal: "Investiga cómo se serializan los IDs en src/services/metaApi.js",
+  context: "Proyecto IG-API, Node.js 22, PNPM, AWS CDK.",
+  toolsets: ["terminal", "file", "web"]
+});
 ```
-
-Esto inyecta el protocolo, reglas y formato de respuesta del rol en el contexto.
 
 ### Cómo delegar tareas con delegate_task
 
@@ -162,7 +165,7 @@ Esto inyecta el protocolo, reglas y formato de respuesta del rol en el contexto.
 ```javascript
 const result = await delegate_task({
   goal: "Investiga cómo se serializan los IDs en src/services/metaApi.js. Escribe hallazgos en progress/research_meta_api.md. Tu respuesta debe ser solo: done -> progress/research_meta_api.md",
-  context: "Proyecto IG-API, Node.js 22, PNPM, AWS CDK. Carga el skill role-explorer para seguir el protocolo.",
+  context: "Proyecto IG-API, Node.js 22, PNPM, AWS CDK.",
   toolsets: ["terminal", "file", "web"]
 });
 ```
@@ -170,8 +173,8 @@ const result = await delegate_task({
 **Ejemplo: Lanzar Implementer para una feature**
 ```javascript
 const result = await delegate_task({
-  goal: "Implementa FEAT-022: Define DynamoDB Data Model. Sigue el protocolo del skill role-implementer. Escribe código, tests y verifica con ./init.js. Tu respuesta final: done -> feature FEAT-022 implementada",
-  context: "Plan: 1) Crear docs/dynamo-data-model.md, 2) Añadir SK a tabla, 3) Añadir GSIs, 4) Actualizar repositorio, 5) Tests. Carga el skill role-implementer.",
+  goal: "Implementa FEAT-022: Define DynamoDB Data Model. Escribe código, tests y verifica con ./init.js. Tu respuesta final: done -> feature FEAT-022 implementada",
+  context: "Plan: 1) Crear docs/dynamo-data-model.md, 2) Añadir SK a tabla, 3) Añadir GSIs, 4) Actualizar repositorio, 5) Tests.",
   toolsets: ["terminal", "file", "coding"]
 });
 ```
@@ -179,8 +182,8 @@ const result = await delegate_task({
 **Ejemplo: Lanzar Reviewer para validar**
 ```javascript
 const result = await delegate_task({
-  goal: "Revisa el trabajo del implementer para FEAT-022. Carga el skill role-reviewer. Ejecuta ./init.js, verifica CHECKPOINTS.md, escribe veredicto en progress/review_FEAT-022.md. Tu respuesta: APPROVED o CHANGES_REQUESTED -> ver progress/review_FEAT-022.md",
-  context: "Archivos modificados: infra/lib/ig-api-stack.js, src/repositories/postRepository.js, tests/postRepository.test.js. Carga el skill role-reviewer.",
+  goal: "Revisa el trabajo del implementer para FEAT-022. Ejecuta ./init.js, verifica CHECKPOINTS.md, escribe veredicto en progress/review_FEAT-022.md. Tu respuesta: APPROVED o CHANGES_REQUESTED -> ver progress/review_FEAT-022.md",
+  context: "Archivos modificados: infra/lib/ig-api-stack.js, src/repositories/postRepository.js, tests/postRepository.test.js.",
   toolsets: ["terminal", "file"]
 });
 ```
@@ -190,12 +193,12 @@ const result = await delegate_task({
 const results = await delegate_task(tasks=[
   {
     goal: "Investiga patrones de repositorio en src/repositories/. Escribe hallazgos en progress/research_repo_patterns.md. Respuesta: done -> progress/research_repo_patterns.md",
-    context: "Carga el skill role-explorer.",
+    context: "",
     toolsets: ["terminal", "file"]
   },
   {
     goal: "Investiga cómo se usan GSIs en DynamoDB. Escribe hallazgos en progress/research_dynamo_gsi.md. Respuesta: done -> progress/research_dynamo_gsi.md",
-    context: "Carga el skill role-explorer.",
+    context: "",
     toolsets: ["terminal", "file", "web"]
   }
 ]);
@@ -205,14 +208,13 @@ const results = await delegate_task(tasks=[
 
 ```
 1. Leader (tú) recibe tarea del usuario
-2. Leader carga skill role-leader
-3. Leader analiza tarea y decide qué subagentes lanzar
-4. Leader lanza Explorer (si necesita investigación)
-5. Leader lanza Implementer (con contexto del Explorer)
-6. Leader lanza Reviewer (para validar trabajo del Implementer)
-7. Leader lanza DevOps (si hay cambios en infra/)
-8. Leader lanza Documentation (si hay cambios arquitectónicos)
-9. Leader resume cambios al usuario y actualiza feature_list.json
+2. Leader analiza tarea y decide qué subagentes lanzar
+3. Leader lanza Explorer (si necesita investigación)
+4. Leader lanza Implementer (con contexto del Explorer)
+5. Leader lanza Reviewer (para validar trabajo del Implementer)
+6. Leader lanza DevOps (si hay cambios en infra/)
+7. Leader lanza Documentation (si hay cambios arquitectónicos)
+8. Leader resume cambios al usuario y actualiza feature_list.json
 ```
 
 ### Restricciones importantes
@@ -234,9 +236,12 @@ Para cada nueva feature o cambio significativo, el enjambre DEBE seguir este ord
 2. **Explorer**: Valida el contexto, estructura y dependencias. Entrega el "Context Brief".
 3. **Leader**: Aprueba el plan y lo pasa al **Implementer** junto con el Brief.
 4. **Implementer**: Ejecuta los cambios en los archivos, siguiendo estrictamente el plan.
-5. **Reviewer**: Ejecuta el checklist de calidad y seguridad. Si falla, vuelve al paso 4. Si pasa, aprueba.
-6. **DevOps / Documentation**: (Solo si el cambio lo requiere) El Leader delega la actualización de infraestructura o documentación.
-7. **Leader**: Resume los cambios para el usuario, actualiza `feature_list.json` a `completed` y **SE DETIENE**.
+5. **Implementer/Leader**: Crea tarea de test dependiente (asignada al perfil adecuado) para cubrir los cambios implementados. Esta tarea debe ejecutarse antes del review final.
+6. **Reviewer**: Ejecuta el checklist de calidad y seguridad. Si falla, vuelve al paso 4. Si pasa, aprueba.
+7. **DevOps / Documentation**: (Solo si el cambio lo requiere) El Leader delega la actualización de infraestructura o documentación.
+8. **Leader**: Resume los cambios para el usuario, actualiza `feature_list.json` a `completed` y **SE DETIENE**.
+
+**Regla de Tests Obligatorios**: Cada tarea de desarrollo (feature, evolución, fix) genera automáticamente una tarea de test dependiente. El flujo no avanza al Reviewer hasta que las pruebas estén implementadas o la tarea de test esté creada y asignada.
 
 ---
 
