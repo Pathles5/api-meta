@@ -39,6 +39,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Validate OpenAPI spec
+        run: npx @apidevtools/swagger-cli validate docs/openapi.yaml
+
+      - name: Verify Express routes match OpenAPI spec
+        run: node scripts/validate-routes.js
+
       - name: Run linter
         run: pnpm lint
 
