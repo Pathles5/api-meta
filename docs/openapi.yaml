@@ -244,6 +244,50 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /posts/list:
+    get:
+      summary: List cached posts from DynamoDB
+      description: Reads posts from DynamoDB with cursor-based pagination.
+      tags: [Posts]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Number of posts to return (1-100)
+        - in: query
+          name: cursor
+          schema:
+            type: string
+          description: Pagination cursor from previous response
+      responses:
+        '200':
+          description: Paginated list of posts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                  paging:
+                    type: object
+                    properties:
+                      nextCursor:
+                        type: string
+                        nullable: true
+        '400':
+          description: Invalid limit parameter
+        '401':
+          description: Unauthorized
+
   /posts/{id}:
     get:
       summary: Get single post by ID

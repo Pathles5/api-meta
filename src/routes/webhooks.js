@@ -31,6 +31,41 @@ function createWebhooksRouter(processor) {
    * Meta sends a GET request with `hub.mode`, `hub.challenge`, and
    * `hub.verify_token` query parameters. If the mode is "subscribe" and
    * the verify token matches, we respond with the challenge value.
+   *
+   * @openapi
+   * /webhooks:
+   *   get:
+   *     summary: Webhook subscription verification
+   *     description: Meta challenge-response for webhook subscription verification.
+   *     tags: [Webhooks]
+   *     parameters:
+   *       - in: query
+   *         name: hub.mode
+   *         schema:
+   *           type: string
+   *         required: true
+   *         description: Must be "subscribe"
+   *       - in: query
+   *         name: hub.challenge
+   *         schema:
+   *           type: string
+   *         required: true
+   *         description: Challenge string to echo back
+   *       - in: query
+   *         name: hub.verify_token
+   *         schema:
+   *           type: string
+   *         required: true
+   *         description: Verification token
+   *     responses:
+   *       200:
+   *         description: Challenge string returned on success
+   *         content:
+   *           text/plain:
+   *             schema:
+   *               type: string
+   *       403:
+   *         description: Invalid mode or token
    */
   router.get("/", (req, res) => {
     const mode = req.query["hub.mode"];
@@ -62,6 +97,28 @@ function createWebhooksRouter(processor) {
    *
    * We always respond 200 to Meta (even on processing errors) to prevent
    * unnecessary retries.
+   *
+   * @openapi
+   * /webhooks:
+   *   post:
+   *     summary: Receive Instagram webhook events
+   *     description: Receives and processes webhook events from Meta (Instagram). Always responds 200.
+   *     tags: [Webhooks]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             description: Raw webhook payload from Meta
+   *     responses:
+   *       200:
+   *         description: Event received (always returned, even on processing errors)
+   *         content:
+   *           text/plain:
+   *             schema:
+   *               type: string
+   *               example: EVENT_RECEIVED
    */
   router.post("/", verifyMetaSignature(), async (req, res) => {
     let payload;
