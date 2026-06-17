@@ -194,6 +194,12 @@ export class IgApiStack extends Stack {
     webhooks.addMethod("GET");
     webhooks.addMethod("POST");
 
+    const docs = api.root.addResource("docs");
+    docs.addMethod("GET");
+
+    const docsJson = docs.addResource("json");
+    docsJson.addMethod("GET");
+
     // ── API Gateway & DynamoDB alarms ──
     const api5xxAlarm = new Alarm(this, `${id}-api-5xx-errors`, {
       metric: api.metricServerError({ period: Duration.minutes(5) }),
