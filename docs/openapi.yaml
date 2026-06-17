@@ -1,4 +1,4 @@
-﻿openapi: 3.1.0
+﻿openapi: 3.0.3
 info:
   title: IG-API - Instagram REST API
   description: REST API that integrates with Meta Instagram Graph API to retrieve posts and handle webhook events

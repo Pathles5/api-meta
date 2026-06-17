@@ -40,7 +40,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Validate OpenAPI spec
-        run: npx @apidevtools/swagger-cli validate docs/openapi.yaml
+        run: pnpm dlx @apidevtools/swagger-cli validate docs/openapi.yaml
 
       - name: Verify Express routes match OpenAPI spec
         run: node scripts/validate-routes.js
@@ -104,7 +104,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install AWS CDK CLI
-        run: npm install -g aws-cdk
+        run: pnpm install -g aws-cdk
 
       - name: CDK Bootstrap (if needed)
         run: |
