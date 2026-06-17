@@ -200,6 +200,10 @@ export class IgApiStack extends Stack {
     const docsJson = docs.addResource("json");
     docsJson.addMethod("GET");
 
+    // Catch-all for Swagger UI static assets (CSS, JS, images)
+    const docsProxy = docs.addResource("{proxy+}");
+    docsProxy.addMethod("ANY");
+
     // ── API Gateway & DynamoDB alarms ──
     const api5xxAlarm = new Alarm(this, `${id}-api-5xx-errors`, {
       metric: api.metricServerError({ period: Duration.minutes(5) }),
